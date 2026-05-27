@@ -240,7 +240,7 @@ fun ReportScreen(
                         if (incomeWidth > 0) {
                             drawRoundRect(
                                 color = Color(0xFF52B788),
-                                offset = Offset(0f, 10f),
+                                topLeft = Offset(0f, 10f),
                                 size = Size(incomeWidth, height - 20f),
                                 cornerRadius = CornerRadius(12f, 12f)
                             )
@@ -250,7 +250,7 @@ fun ReportScreen(
                         if (expenseWidth > 0) {
                             drawRoundRect(
                                 color = Color(0xFFF4A261),
-                                offset = Offset(incomeWidth + 4f, 10f),
+                                topLeft = Offset(incomeWidth + 4f, 10f),
                                 size = Size(expenseWidth - 4f, height - 20f),
                                 cornerRadius = CornerRadius(12f, 12f)
                             )

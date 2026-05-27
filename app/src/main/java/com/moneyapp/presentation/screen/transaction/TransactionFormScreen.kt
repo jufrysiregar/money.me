@@ -284,7 +284,8 @@ fun TransactionFormScreen(
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = if (formState.type == TransactionType.INCOME) Color(0xFF52B788) else Color(0xFFF4A261),
                         unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
-                        containerColor = MaterialTheme.colorScheme.surface
+                        focusedContainerColor = MaterialTheme.colorScheme.surface,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surface
                     ),
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -359,7 +360,8 @@ fun TransactionFormScreen(
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = if (formState.type == TransactionType.INCOME) Color(0xFF52B788) else Color(0xFFF4A261),
                         unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
-                        containerColor = MaterialTheme.colorScheme.surface
+                        focusedContainerColor = MaterialTheme.colorScheme.surface,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surface
                     ),
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -419,7 +421,8 @@ fun TransactionFormScreen(
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = if (formState.type == TransactionType.INCOME) Color(0xFF52B788) else Color(0xFFF4A261),
                         unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
-                        containerColor = MaterialTheme.colorScheme.surface
+                        focusedContainerColor = MaterialTheme.colorScheme.surface,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surface
                     ),
                     modifier = Modifier.fillMaxWidth()
                 )

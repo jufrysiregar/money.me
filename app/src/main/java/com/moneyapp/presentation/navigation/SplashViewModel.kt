@@ -25,14 +25,14 @@ class SplashViewModel @Inject constructor(
     private val _user = MutableStateFlow<User?>(null)
     val user: StateFlow<User?> = _user.asStateFlow()
 
-    var isLoaded by MutableStateFlow(false)
-        private set
+    private val _isLoaded = MutableStateFlow(false)
+    val isLoaded: StateFlow<Boolean> = _isLoaded.asStateFlow()
 
     init {
         viewModelScope.launch {
             userRepository.getUser().collectLatest { currentUser ->
                 _user.value = currentUser
-                isLoaded = true
+                _isLoaded.value = true
             }
         }
     }

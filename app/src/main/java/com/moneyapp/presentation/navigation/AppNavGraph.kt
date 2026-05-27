@@ -194,11 +194,12 @@ private fun SplashScreen(
     viewModel: SplashViewModel = hiltViewModel()
 ) {
     val user by viewModel.user.collectAsState(initial = null)
+    val isLoaded by viewModel.isLoaded.collectAsState()
 
     LaunchedEffect(user) {
         // Tunggu sampai Flow emit nilai pertama (bukan null karena belum load)
         // viewModel.isLoaded memastikan kita sudah mendapat respons dari DB
-        if (viewModel.isLoaded) {
+        if (isLoaded) {
             if (user == null) {
                 navController.navigate(Screen.Onboarding.route) {
                     popUpTo(Screen.Splash.route) { inclusive = true }
