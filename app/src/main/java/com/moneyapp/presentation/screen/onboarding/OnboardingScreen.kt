@@ -58,11 +58,25 @@ fun OnboardingScreen(
         }
     }
 
-    // Themed background matching the rest of the app
+    val isDark = androidx.compose.foundation.isSystemInDarkTheme()
+
+    // Themed gradient background: Vibrant for Light, Deep for Dark
+    val gradientColors = if (isDark) {
+        listOf(
+            Color(0xFF143024), // Darker Tosca
+            Color(0xFF0C293E)  // Darker Blue
+        )
+    } else {
+        listOf(
+            Color(0xFF2D6A4F), // Original Success Tosca
+            Color(0xFF1E6091)  // Original Primary Blue
+        )
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background),
+            .background(Brush.verticalGradient(colors = gradientColors)),
         contentAlignment = Alignment.Center
     ) {
         Column(
@@ -76,7 +90,7 @@ fun OnboardingScreen(
             Text(
                 text = "Money.Me",
                 style = MaterialTheme.typography.displayMedium.copy(
-                    color = MaterialTheme.colorScheme.primary,
+                    color = Color.White,
                     fontWeight = FontWeight.ExtraBold,
                     letterSpacing = 1.5.sp
                 ),
@@ -86,7 +100,7 @@ fun OnboardingScreen(
             Text(
                 text = "Offline-first Personal Finance Tracker",
                 style = MaterialTheme.typography.titleMedium.copy(
-                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.8f),
+                    color = Color.White.copy(alpha = 0.8f),
                     fontWeight = FontWeight.Light
                 ),
                 textAlign = TextAlign.Center
@@ -98,14 +112,14 @@ fun OnboardingScreen(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(24.dp))
+                    .background(Color.White.copy(alpha = 0.12f), RoundedCornerShape(24.dp))
                     .padding(24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
                     text = "Selamat Datang!",
                     style = MaterialTheme.typography.headlineSmall.copy(
-                        color = MaterialTheme.colorScheme.onSurface,
+                        color = Color.White,
                         fontWeight = FontWeight.Bold
                     )
                 )
@@ -113,7 +127,7 @@ fun OnboardingScreen(
                 Text(
                     text = "Silakan masukkan nama lengkap Anda untuk memulai pencatatan keuangan pribadi.",
                     style = MaterialTheme.typography.bodyMedium.copy(
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                        color = Color.White.copy(alpha = 0.7f)
                     ),
                     textAlign = TextAlign.Center,
                     modifier = Modifier.padding(vertical = 8.dp)
@@ -125,8 +139,8 @@ fun OnboardingScreen(
                 OutlinedTextField(
                     value = uiState.name,
                     onValueChange = { viewModel.onNameChange(it) },
-                    label = { Text("Nama Lengkap", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)) },
-                    placeholder = { Text("cth: Wahyu Pradana", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)) },
+                    label = { Text("Nama Lengkap", color = Color.White.copy(alpha = 0.8f)) },
+                    placeholder = { Text("cth: Wahyu Pradana", color = Color.White.copy(alpha = 0.4f)) },
                     singleLine = true,
                     isError = uiState.nameError != null,
                     supportingText = {
@@ -146,11 +160,13 @@ fun OnboardingScreen(
                         onDone = { viewModel.onSaveClick() }
                     ),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = MaterialTheme.colorScheme.primary,
-                        unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
-                        errorBorderColor = MaterialTheme.colorScheme.error,
-                        focusedContainerColor = MaterialTheme.colorScheme.surface,
-                        unfocusedContainerColor = MaterialTheme.colorScheme.surface
+                        focusedTextColor = Color.White,
+                        unfocusedTextColor = Color.White,
+                        focusedBorderColor = Color.White,
+                        unfocusedBorderColor = Color.White.copy(alpha = 0.5f),
+                        errorBorderColor = Color(0xFFF4A261),
+                        focusedContainerColor = Color.Transparent,
+                        unfocusedContainerColor = Color.Transparent
                     ),
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -163,17 +179,17 @@ fun OnboardingScreen(
                     enabled = !uiState.isLoading,
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        contentColor = MaterialTheme.colorScheme.onPrimary,
-                        disabledContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
-                        disabledContentColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.5f)
+                        containerColor = Color.White,
+                        contentColor = Color(0xFF1E6091),
+                        disabledContainerColor = Color.White.copy(alpha = 0.3f),
+                        disabledContentColor = Color.White
                     ),
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(50.dp)
                 ) {
                     if (uiState.isLoading) {
-                        CircularProgressIndicator(color = MaterialTheme.colorScheme.onPrimary)
+                        CircularProgressIndicator(color = Color(0xFF1E6091))
                     } else {
                         Text(
                             text = "Mulai Pencatatan",
