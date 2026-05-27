@@ -1,6 +1,6 @@
 [versions]
 agp = "8.5.2"
-kotlin = "1.9.25"
+kotlin = "2.0.0"
 coreKtx = "1.13.1"
 junit = "4.13.2"
 junitVersion = "1.2.1"
@@ -14,7 +14,7 @@ hilt = "2.51.1"
 hiltNavigationCompose = "1.2.0"
 datastore = "1.1.1"
 coroutines = "1.8.1"
-ksp = "1.9.25-1.0.20"
+ksp = "2.0.0-1.0.24"
 kotest = "5.9.1"
 kotestProperty = "5.9.1"
 
