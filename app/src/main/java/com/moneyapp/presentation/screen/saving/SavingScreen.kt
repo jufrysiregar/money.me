@@ -53,8 +53,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -332,8 +334,8 @@ fun SavingScreen(
                     )
 
                     OutlinedTextField(
-                        value = targetAmount,
-                        onValueChange = { targetAmount = formatRupiahInput(it) },
+                        value = TextFieldValue(targetAmount, selection = TextRange(targetAmount.length)),
+                        onValueChange = { targetAmount = formatRupiahInput(it.text) },
                         label = { Text("Nominal Target (Rp)") },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         shape = RoundedCornerShape(12.dp),
@@ -341,8 +343,8 @@ fun SavingScreen(
                     )
 
                     OutlinedTextField(
-                        value = currentAmount,
-                        onValueChange = { currentAmount = formatRupiahInput(it) },
+                        value = TextFieldValue(currentAmount, selection = TextRange(currentAmount.length)),
+                        onValueChange = { currentAmount = formatRupiahInput(it.text) },
                         label = { Text("Terkumpul Awal (Rp)") },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         shape = RoundedCornerShape(12.dp),
@@ -399,8 +401,8 @@ fun SavingScreen(
                     Text("Terkumpul saat ini: ${formatRupiah(selectedSavingForTopUp!!.currentAmount)}", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
                     Spacer(modifier = Modifier.height(14.dp))
                     OutlinedTextField(
-                        value = topUpInput,
-                        onValueChange = { topUpInput = formatRupiahInput(it) },
+                        value = TextFieldValue(topUpInput, selection = TextRange(topUpInput.length)),
+                        onValueChange = { topUpInput = formatRupiahInput(it.text) },
                         label = { Text("Jumlah Top Up (Rp)") },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         shape = RoundedCornerShape(12.dp),
@@ -408,8 +410,8 @@ fun SavingScreen(
                     )
                     Spacer(modifier = Modifier.height(12.dp))
                     OutlinedTextField(
-                        value = targetUpdateInput,
-                        onValueChange = { targetUpdateInput = formatRupiahInput(it) },
+                        value = TextFieldValue(targetUpdateInput, selection = TextRange(targetUpdateInput.length)),
+                        onValueChange = { targetUpdateInput = formatRupiahInput(it.text) },
                         label = { Text("Ubah Nilai Target (Rp)") },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         shape = RoundedCornerShape(12.dp),

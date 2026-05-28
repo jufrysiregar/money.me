@@ -68,6 +68,8 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -291,8 +293,11 @@ fun TransactionFormScreen(
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 OutlinedTextField(
-                    value = formState.amount,
-                    onValueChange = { viewModel.onAmountChange(it) },
+                    value = TextFieldValue(
+                        text = formState.amount,
+                        selection = TextRange(formState.amount.length)
+                    ),
+                    onValueChange = { viewModel.onAmountChange(it.text) },
                     prefix = { Text("Rp ", fontWeight = FontWeight.Bold) },
                     placeholder = { Text("Masukkan nominal") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),

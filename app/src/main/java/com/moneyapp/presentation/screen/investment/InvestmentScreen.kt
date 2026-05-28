@@ -53,8 +53,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -256,8 +258,8 @@ fun InvestmentScreen(
                     )
 
                     OutlinedTextField(
-                        value = amount,
-                        onValueChange = { amount = formatRupiahInput(it) },
+                        value = TextFieldValue(amount, selection = TextRange(amount.length)),
+                        onValueChange = { amount = formatRupiahInput(it.text) },
                         label = { Text("Modal Awal (Rp)") },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         shape = RoundedCornerShape(12.dp),
@@ -265,8 +267,8 @@ fun InvestmentScreen(
                     )
 
                     OutlinedTextField(
-                        value = currentValue,
-                        onValueChange = { currentValue = formatRupiahInput(it) },
+                        value = TextFieldValue(currentValue, selection = TextRange(currentValue.length)),
+                        onValueChange = { currentValue = formatRupiahInput(it.text) },
                         label = { Text("Nilai Sekarang (Rp)") },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         shape = RoundedCornerShape(12.dp),
@@ -321,8 +323,8 @@ fun InvestmentScreen(
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Text("Aset: ${selectedInvestmentForEdit!!.name}", fontSize = 14.sp)
                     OutlinedTextField(
-                        value = editAdditionalAmountInput,
-                        onValueChange = { editAdditionalAmountInput = formatRupiahInput(it) },
+                        value = TextFieldValue(editAdditionalAmountInput, selection = TextRange(editAdditionalAmountInput.length)),
+                        onValueChange = { editAdditionalAmountInput = formatRupiahInput(it.text) },
                         label = { Text("Tambah Investasi (Rp)") },
                         placeholder = { Text("Kosongkan jika tidak tambah modal") },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
@@ -330,8 +332,8 @@ fun InvestmentScreen(
                         modifier = Modifier.fillMaxWidth()
                     )
                     OutlinedTextField(
-                        value = editCurrentValueInput,
-                        onValueChange = { editCurrentValueInput = formatRupiahInput(it) },
+                        value = TextFieldValue(editCurrentValueInput, selection = TextRange(editCurrentValueInput.length)),
+                        onValueChange = { editCurrentValueInput = formatRupiahInput(it.text) },
                         label = { Text("Harga Sekarang (Rp)") },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         shape = RoundedCornerShape(12.dp),
