@@ -27,7 +27,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.ChevronRight
-import androidx.compose.material.icons.filled.Savings
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -251,7 +250,7 @@ fun DashboardScreen(
                         DashboardAssetCard(
                             title = "TABUNGAN",
                             value = summary?.totalSaving ?: 0.0,
-                            icon = "",
+                            icon = "💸",
                             backgroundColor = Color(0xFF1E6091),
                             onClick = { navController.navigate(Screen.Saving.route) }
                         )
@@ -417,16 +416,7 @@ private fun DashboardAssetCard(
                     fontWeight = FontWeight.Bold,
                     color = Color.White.copy(alpha = 0.8f)
                 )
-                if (title == "TABUNGAN") {
-                    Icon(
-                        imageVector = Icons.Filled.Savings,
-                        contentDescription = title,
-                        tint = Color.White,
-                        modifier = Modifier.size(20.dp)
-                    )
-                } else {
-                    Text(text = icon, fontSize = 16.sp)
-                }
+                Text(text = icon, fontSize = 16.sp)
             }
             Column {
                 Text(

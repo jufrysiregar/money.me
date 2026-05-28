@@ -1,8 +1,12 @@
 package com.moneyapp.presentation.navigation
 
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BarChart
@@ -24,6 +28,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -46,6 +51,7 @@ import com.moneyapp.presentation.screen.saving.SavingScreen
 import com.moneyapp.presentation.screen.report.ReportScreen
 import com.moneyapp.presentation.screen.settings.SettingsScreen
 import com.moneyapp.data.local.db.AppDatabase
+import com.moneyapp.presentation.theme.ThemeMode
 
 /**
  * Data class untuk item Bottom Navigation.
@@ -87,11 +93,12 @@ fun AppNavGraph(
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
     val showBottomBar = currentDestination?.route in bottomNavRoutes
+    val themeMode by themePreferences.themeMode.collectAsState(initial = ThemeMode.SYSTEM)
 
     Scaffold(
         bottomBar = {
             if (showBottomBar) {
-                AppBottomNavigation(navController = navController)
+                AppBottomNavigation(navController = navController, themeMode = themeMode)
             }
         }
     ) { innerPadding ->
@@ -225,50 +232,67 @@ private fun SplashScreen(
  * Tab aktif ditandai dengan warna Primary dari MaterialTheme.
  */
 @Composable
-private fun AppBottomNavigation(navController: NavHostController) {
+private fun AppBottomNavigation(
+    navController: NavHostController,
+    themeMode: ThemeMode
+) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
-    val isDarkTheme = isSystemInDarkTheme()
+    val systemDarkTheme = isSystemInDarkTheme()
+    val isDarkTheme = when (themeMode) {
+        ThemeMode.LIGHT -> false
+        ThemeMode.DARK -> true
+        ThemeMode.SYSTEM -> systemDarkTheme
+    }
     val navBackground = if (isDarkTheme) Color(0xFF121212) else Color(0xFFFFFFFF)
     val activeColor = if (isDarkTheme) Color(0xFFC7E9D0) else Color(0xFFA7C957)
     val inactiveColor = if (isDarkTheme) Color(0xFF6C757D) else Color(0xFFADB5BD)
+    val dividerColor = if (isDarkTheme) Color(0xFF2A2A2A) else Color(0xFFE5E7EB)
 
-    NavigationBar(
-        containerColor = navBackground,
-        contentColor = activeColor
-    ) {
-        bottomNavItems.forEach { item ->
-            val selected = currentDestination?.hierarchy?.any {
-                it.route == item.screen.route
-            } == true
+    Column {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(1.dp)
+                .background(dividerColor)
+        )
+        NavigationBar(
+            containerColor = navBackground,
+            contentColor = activeColor
+        ) {
+            bottomNavItems.forEach { item ->
+                val selected = currentDestination?.hierarchy?.any {
+                    it.route == item.screen.route
+                } == true
 
-            NavigationBarItem(
-                selected = selected,
-                onClick = {
-                    navController.navigate(item.screen.route) {
-                        // Hindari stack yang menumpuk saat tap tab berulang
-                        popUpTo(navController.graph.findStartDestination().id) {
-                            saveState = true
+                NavigationBarItem(
+                    selected = selected,
+                    onClick = {
+                        navController.navigate(item.screen.route) {
+                            // Hindari stack yang menumpuk saat tap tab berulang
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
                         }
-                        launchSingleTop = true
-                        restoreState = true
-                    }
-                },
-                icon = {
-                    Icon(
-                        imageVector = item.icon,
-                        contentDescription = item.label
+                    },
+                    icon = {
+                        Icon(
+                            imageVector = item.icon,
+                            contentDescription = item.label
+                        )
+                    },
+                    label = { Text(text = item.label) },
+                    colors = NavigationBarItemDefaults.colors(
+                        selectedIconColor = activeColor,
+                        selectedTextColor = activeColor,
+                        indicatorColor = Color.Transparent,
+                        unselectedIconColor = inactiveColor,
+                        unselectedTextColor = inactiveColor
                     )
-                },
-                label = { Text(text = item.label) },
-                colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = activeColor,
-                    selectedTextColor = activeColor,
-                    indicatorColor = Color.Transparent,
-                    unselectedIconColor = inactiveColor,
-                    unselectedTextColor = inactiveColor
                 )
-            )
+            }
         }
     }
 }
