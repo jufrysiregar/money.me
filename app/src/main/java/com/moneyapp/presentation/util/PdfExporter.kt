@@ -10,6 +10,7 @@ import com.moneyapp.domain.model.Transaction
 import com.moneyapp.domain.model.TransactionType
 import java.io.File
 import java.io.FileOutputStream
+import java.io.OutputStream
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
@@ -30,6 +31,22 @@ object PdfExporter {
      * @return File referencing the generated PDF
      */
     fun exportToPdf(context: Context, transactions: List<Transaction>, periodName: String): File {
+        val exportDir = File(context.getExternalFilesDir(null) ?: context.filesDir, "Documents/Money.Me")
+        if (!exportDir.exists()) {
+            exportDir.mkdirs()
+        }
+
+        val cleanPeriod = periodName.replace(" ", "_")
+        val pdfFile = File(exportDir, "laporan_$cleanPeriod.pdf")
+
+        FileOutputStream(pdfFile).use { output ->
+            exportToPdf(output, transactions, periodName)
+        }
+
+        return pdfFile
+    }
+
+    fun exportToPdf(outputStream: OutputStream, transactions: List<Transaction>, periodName: String) {
         val pdfDocument = PdfDocument()
 
         // Page info: A4 dimensions roughly 595 x 842 points
@@ -173,18 +190,7 @@ object PdfExporter {
         pdfDocument.finishPage(page)
 
         // ── 5. File Output Preparation ───────────────────────────────────────
-        val exportDir = File(context.getExternalFilesDir(null) ?: context.filesDir, "Documents/Money.Me")
-        if (!exportDir.exists()) {
-            exportDir.mkdirs()
-        }
-
-        // Clean period name for file compatibility
-        val cleanPeriod = periodName.replace(" ", "_")
-        val pdfFile = File(exportDir, "laporan_$cleanPeriod.pdf")
-
-        pdfDocument.writeTo(FileOutputStream(pdfFile))
+        pdfDocument.writeTo(outputStream)
         pdfDocument.close()
-
-        return pdfFile
     }
 }

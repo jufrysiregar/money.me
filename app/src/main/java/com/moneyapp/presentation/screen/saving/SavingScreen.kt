@@ -62,6 +62,8 @@ import androidx.navigation.NavController
 import com.moneyapp.domain.model.Saving
 import com.moneyapp.presentation.screen.dashboard.formatRupiah
 import com.moneyapp.presentation.screen.transaction.showDatePicker
+import com.moneyapp.presentation.util.formatRupiahInput
+import com.moneyapp.presentation.util.parseRupiahInput
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -78,6 +80,7 @@ fun SavingScreen(
     var showAddDialog by remember { mutableStateOf(false) }
     var showTopUpDialog by remember { mutableStateOf(false) }
     var selectedSavingForTopUp by remember { mutableStateOf<Saving?>(null) }
+    var selectedSavingForDelete by remember { mutableStateOf<Saving?>(null) }
 
     // Dialog state for Adding Saving Goal
     var name by remember { mutableStateOf("") }
@@ -88,6 +91,7 @@ fun SavingScreen(
 
     // Dialog state for Top-Up
     var topUpInput by remember { mutableStateOf("") }
+    var targetUpdateInput by remember { mutableStateOf("") }
 
     // Listen to events
     LaunchedEffect(Unit) {
@@ -96,11 +100,13 @@ fun SavingScreen(
                 is SavingUiEvent.Success -> {
                     showAddDialog = false
                     showTopUpDialog = false
+                    selectedSavingForDelete = null
                     // Reset fields
                     name = ""
                     targetAmount = ""
                     currentAmount = ""
                     topUpInput = ""
+                    targetUpdateInput = ""
                     date = LocalDate.now().plusMonths(6)
                 }
                 is SavingUiEvent.Error -> {
@@ -160,6 +166,7 @@ fun SavingScreen(
                         .clickable {
                             selectedSavingForTopUp = primarySaving
                             topUpInput = ""
+                            targetUpdateInput = formatRupiahInput(primarySaving.targetAmount.toLong().toString())
                             showTopUpDialog = true
                         }
                 ) {
@@ -294,9 +301,10 @@ fun SavingScreen(
                             onTopUpClick = {
                                 selectedSavingForTopUp = sav
                                 topUpInput = ""
+                                targetUpdateInput = formatRupiahInput(sav.targetAmount.toLong().toString())
                                 showTopUpDialog = true
                             },
-                            onDeleteClick = { viewModel.deleteSaving(sav.id) }
+                            onDeleteClick = { selectedSavingForDelete = sav }
                         )
                     }
                     item {
@@ -325,7 +333,7 @@ fun SavingScreen(
 
                     OutlinedTextField(
                         value = targetAmount,
-                        onValueChange = { targetAmount = it },
+                        onValueChange = { targetAmount = formatRupiahInput(it) },
                         label = { Text("Nominal Target (Rp)") },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         shape = RoundedCornerShape(12.dp),
@@ -334,7 +342,7 @@ fun SavingScreen(
 
                     OutlinedTextField(
                         value = currentAmount,
-                        onValueChange = { currentAmount = it },
+                        onValueChange = { currentAmount = formatRupiahInput(it) },
                         label = { Text("Terkumpul Awal (Rp)") },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         shape = RoundedCornerShape(12.dp),
@@ -360,8 +368,8 @@ fun SavingScreen(
             confirmButton = {
                 Button(
                     onClick = {
-                        val targetVal = targetAmount.toDoubleOrNull() ?: 0.0
-                        val currentVal = currentAmount.toDoubleOrNull() ?: 0.0
+                        val targetVal = parseRupiahInput(targetAmount) ?: 0.0
+                        val currentVal = parseRupiahInput(currentAmount) ?: 0.0
                         viewModel.saveSaving(name, targetVal, currentVal, date)
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1E6091))
@@ -392,8 +400,17 @@ fun SavingScreen(
                     Spacer(modifier = Modifier.height(14.dp))
                     OutlinedTextField(
                         value = topUpInput,
-                        onValueChange = { topUpInput = it },
+                        onValueChange = { topUpInput = formatRupiahInput(it) },
                         label = { Text("Jumlah Top Up (Rp)") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    OutlinedTextField(
+                        value = targetUpdateInput,
+                        onValueChange = { targetUpdateInput = formatRupiahInput(it) },
+                        label = { Text("Ubah Nilai Target (Rp)") },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         shape = RoundedCornerShape(12.dp),
                         modifier = Modifier.fillMaxWidth()
@@ -403,11 +420,12 @@ fun SavingScreen(
             confirmButton = {
                 Button(
                     onClick = {
-                        val topUpVal = topUpInput.toDoubleOrNull() ?: 0.0
-                        viewModel.topUpSaving(
+                        val topUpVal = parseRupiahInput(topUpInput) ?: 0.0
+                        val targetVal = parseRupiahInput(targetUpdateInput)
+                        viewModel.updateSavingGoal(
                             selectedSavingForTopUp!!.id,
-                            selectedSavingForTopUp!!.currentAmount,
-                            topUpVal
+                            topUpVal,
+                            targetVal
                         )
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1E6091))
@@ -418,6 +436,32 @@ fun SavingScreen(
             dismissButton = {
                 Button(
                     onClick = { showTopUpDialog = false },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent, contentColor = MaterialTheme.colorScheme.onSurface)
+                ) {
+                    Text("Batal")
+                }
+            }
+        )
+    }
+
+    if (selectedSavingForDelete != null) {
+        AlertDialog(
+            onDismissRequest = { selectedSavingForDelete = null },
+            title = { Text("Hapus Tabungan?", fontWeight = FontWeight.Bold) },
+            text = {
+                Text("Yakin ingin menghapus ${selectedSavingForDelete!!.targetName}? Data ini tidak bisa dikembalikan.")
+            },
+            confirmButton = {
+                Button(
+                    onClick = { viewModel.deleteSaving(selectedSavingForDelete!!.id) },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                ) {
+                    Text("Hapus")
+                }
+            },
+            dismissButton = {
+                Button(
+                    onClick = { selectedSavingForDelete = null },
                     colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent, contentColor = MaterialTheme.colorScheme.onSurface)
                 ) {
                     Text("Batal")

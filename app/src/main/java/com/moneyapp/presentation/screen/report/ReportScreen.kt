@@ -1,10 +1,13 @@
 package com.moneyapp.presentation.screen.report
 
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,7 +24,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarMonth
-import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.PictureAsPdf
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -57,6 +59,7 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -69,13 +72,15 @@ import com.moneyapp.domain.model.TransactionType
 import com.moneyapp.presentation.screen.dashboard.formatRupiah
 import com.moneyapp.presentation.screen.transaction.TransactionViewModel
 import com.moneyapp.presentation.screen.transaction.showDatePicker
-import com.moneyapp.presentation.util.BackupManager
 import com.moneyapp.presentation.util.PdfExporter
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+import kotlin.math.abs
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -88,13 +93,54 @@ fun ReportScreen(
     val coroutineScope = rememberCoroutineScope()
     val transactions by viewModel.transactions.collectAsState()
 
-    var activePeriodTab by remember { mutableIntStateOf(2) } // Default: Bulan (Bulan Ini)
+    var activePeriodTab by remember { mutableIntStateOf(0) } // Default: Hari
     var selectedDate by remember { mutableStateOf(LocalDate.now()) }
+    var horizontalDragAmount by remember { mutableFloatStateOf(0f) }
     val dateFormatter = remember { DateTimeFormatter.ofPattern("MMMM yyyy", Locale("id", "ID")) }
 
     // Dialog state for PDF printing progress
     var showPdfProgress by remember { mutableStateOf(false) }
     var pdfProgress by remember { mutableFloatStateOf(0f) }
+    var pendingPdfTransactions by remember { mutableStateOf<List<Transaction>>(emptyList()) }
+    var pendingPdfLabel by remember { mutableStateOf("") }
+
+    fun currentPeriodLabel(): String {
+        return when (activePeriodTab) {
+            0 -> selectedDate.format(DateTimeFormatter.ofPattern("dd_MMMM_yyyy", Locale("id", "ID")))
+            1 -> "Minggu_ke_${selectedDate.dayOfMonth / 7 + 1}_${selectedDate.format(DateTimeFormatter.ofPattern("MMMM_yyyy", Locale("id", "ID")))}"
+            2 -> selectedDate.format(DateTimeFormatter.ofPattern("MMMM_yyyy", Locale("id", "ID")))
+            3 -> "${selectedDate.year}"
+            else -> "Laporan"
+        }
+    }
+
+    val pdfDocumentLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("application/pdf")
+    ) { uri ->
+        if (uri == null) {
+            Toast.makeText(context, "Penyimpanan PDF dibatalkan", Toast.LENGTH_SHORT).show()
+            return@rememberLauncherForActivityResult
+        }
+
+        coroutineScope.launch {
+            showPdfProgress = true
+            pdfProgress = 0.2f
+            try {
+                withContext(Dispatchers.IO) {
+                    context.contentResolver.openOutputStream(uri)?.use { output ->
+                        PdfExporter.exportToPdf(output, pendingPdfTransactions, pendingPdfLabel)
+                    } ?: error("Tidak bisa membuka lokasi file")
+                }
+                pdfProgress = 1.0f
+                delay(200)
+                Toast.makeText(context, "Laporan PDF berhasil disimpan", Toast.LENGTH_LONG).show()
+            } catch (e: Exception) {
+                Toast.makeText(context, "Gagal menyimpan PDF: ${e.message}", Toast.LENGTH_LONG).show()
+            } finally {
+                showPdfProgress = false
+            }
+        }
+    }
 
     // Group items for the active period (Day, Week, Month, Year)
     val filteredTransactions = remember(transactions, activePeriodTab, selectedDate) {
@@ -141,6 +187,26 @@ fun ReportScreen(
                 .background(MaterialTheme.colorScheme.background)
                 .padding(innerPadding)
                 .padding(horizontal = 16.dp)
+                .pointerInput(activePeriodTab) {
+                    detectHorizontalDragGestures(
+                        onDragStart = { horizontalDragAmount = 0f },
+                        onHorizontalDrag = { _, dragAmount ->
+                            horizontalDragAmount += dragAmount
+                        },
+                        onDragEnd = {
+                            val swipeThreshold = 80f
+                            if (abs(horizontalDragAmount) > swipeThreshold) {
+                                activePeriodTab = if (horizontalDragAmount < 0) {
+                                    (activePeriodTab + 1).coerceAtMost(3)
+                                } else {
+                                    (activePeriodTab - 1).coerceAtLeast(0)
+                                }
+                            }
+                            horizontalDragAmount = 0f
+                        },
+                        onDragCancel = { horizontalDragAmount = 0f }
+                    )
+                }
         ) {
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -346,68 +412,28 @@ fun ReportScreen(
                 }
             }
 
-            // Bottom Buttons (Cetak PDF & Export Backup) (Mockup 4)
-            Row(
+            // Bottom Button (Cetak PDF)
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 12.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    .padding(vertical = 12.dp)
             ) {
                 Button(
                     onClick = {
-                        // Start PDF Generation Progress Dialog flow (Mockup 5)
-                        coroutineScope.launch {
-                            showPdfProgress = true
-                            pdfProgress = 0.1f
-                            delay(300)
-                            pdfProgress = 0.4f
-                            delay(400)
-                            pdfProgress = 0.8f
-                            delay(300)
-                            pdfProgress = 1.0f
-
-                            val label = when (activePeriodTab) {
-                                0 -> selectedDate.format(DateTimeFormatter.ofPattern("dd_MMMM_yyyy", Locale("id", "ID")))
-                                1 -> "Minggu_ke_${selectedDate.dayOfMonth / 7 + 1}_${selectedDate.format(DateTimeFormatter.ofPattern("MMMM_yyyy", Locale("id", "ID")))}"
-                                2 -> selectedDate.format(DateTimeFormatter.ofPattern("MMMM_yyyy", Locale("id", "ID")))
-                                3 -> "${selectedDate.year}"
-                                else -> "Laporan"
-                            }
-
-                            PdfExporter.exportToPdf(context, filteredTransactions, label)
-                            delay(200)
-                            showPdfProgress = false
-                            Toast.makeText(context, "Laporan PDF berhasil dicetak ke folder Documents!", Toast.LENGTH_LONG).show()
-                        }
+                        val label = currentPeriodLabel()
+                        pendingPdfLabel = label
+                        pendingPdfTransactions = filteredTransactions
+                        pdfDocumentLauncher.launch("laporan_$label.pdf")
                     },
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary, contentColor = Color.White),
                     modifier = Modifier
-                        .weight(1f)
+                        .fillMaxWidth()
                         .height(48.dp)
                 ) {
                     Icon(imageVector = Icons.Filled.PictureAsPdf, contentDescription = null, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(6.dp))
                     Text("Cetak PDF", fontWeight = FontWeight.Bold, fontSize = 13.sp)
-                }
-
-                Button(
-                    onClick = {
-                        coroutineScope.launch {
-                            val fileName = "money_backup_${LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"))}.zip"
-                            BackupManager.performBackup(context, db, fileName)
-                            Toast.makeText(context, "Full backup ekspor berhasil disimpan ke folder exports!", Toast.LENGTH_LONG).show()
-                        }
-                    },
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF52B788), contentColor = Color.White),
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(48.dp)
-                ) {
-                    Icon(imageVector = Icons.Filled.Download, contentDescription = null, modifier = Modifier.size(16.dp))
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text("Export", fontWeight = FontWeight.Bold, fontSize = 13.sp)
                 }
             }
         }

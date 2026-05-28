@@ -21,6 +21,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -167,6 +168,7 @@ fun TransactionListScreen(
                         items(list, key = { it.id }) { tx ->
                             TransactionListItem(
                                 transaction = tx,
+                                onEditClick = { navController.navigate(Screen.TransactionForm.createRoute(tx.id)) },
                                 onDeleteClick = { viewModel.deleteTransaction(tx.id) },
                                 onClick = { navController.navigate(Screen.TransactionDetail.createRoute(tx.id)) }
                             )
@@ -205,6 +207,7 @@ fun TransactionListScreen(
 @Composable
 private fun TransactionListItem(
     transaction: Transaction,
+    onEditClick: () -> Unit,
     onDeleteClick: () -> Unit,
     onClick: () -> Unit
 ) {
@@ -305,6 +308,20 @@ private fun TransactionListItem(
                 )
 
                 Spacer(modifier = Modifier.width(12.dp))
+
+                IconButton(
+                    onClick = onEditClick,
+                    modifier = Modifier.size(24.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Edit,
+                        contentDescription = "Edit",
+                        tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.65f),
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(8.dp))
 
                 IconButton(
                     onClick = onDeleteClick,

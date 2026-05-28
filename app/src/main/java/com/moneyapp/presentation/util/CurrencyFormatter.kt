@@ -17,3 +17,19 @@ fun formatRupiah(amount: Double): String {
     val formatter = NumberFormat.getNumberInstance(Locale("id", "ID"))
     return "Rp ${formatter.format(amount.toLong())}"
 }
+
+fun formatRupiahInput(value: String): String {
+    val rawDigits = value.filter { it.isDigit() }
+    val digits = rawDigits.trimStart('0').ifEmpty {
+        if (rawDigits.isNotEmpty()) "0" else ""
+    }
+    if (digits.isEmpty()) return ""
+
+    val formatter = NumberFormat.getNumberInstance(Locale("id", "ID"))
+    return formatter.format(digits.toLongOrNull() ?: return digits)
+}
+
+fun parseRupiahInput(value: String): Double? {
+    val digits = value.filter { it.isDigit() }
+    return digits.toDoubleOrNull()
+}

@@ -76,6 +76,37 @@ class SavingViewModel @Inject constructor(
         }
     }
 
+    fun updateSavingGoal(id: Long, topUpAmount: Double, targetAmount: Double?) {
+        viewModelScope.launch {
+            if (topUpAmount < 0) {
+                _uiEvent.send(SavingUiEvent.Error("Nominal top up tidak boleh negatif"))
+                return@launch
+            }
+
+            val existing = savings.value.firstOrNull { it.id == id }
+            if (existing == null) {
+                _uiEvent.send(SavingUiEvent.Error("Target tabungan tidak ditemukan"))
+                return@launch
+            }
+
+            val newTargetAmount = targetAmount ?: existing.targetAmount
+            if (newTargetAmount <= 0) {
+                _uiEvent.send(SavingUiEvent.Error("Target nominal harus lebih dari 0"))
+                return@launch
+            }
+
+            val updatedSaving = existing.copy(
+                targetAmount = newTargetAmount,
+                currentAmount = existing.currentAmount + topUpAmount
+            )
+
+            when (val result = saveSavingUseCase(updatedSaving)) {
+                is AppResult.Success -> _uiEvent.send(SavingUiEvent.Success)
+                is AppResult.Error -> _uiEvent.send(SavingUiEvent.Error(result.message))
+            }
+        }
+    }
+
     fun deleteSaving(id: Long) {
         viewModelScope.launch {
             try {

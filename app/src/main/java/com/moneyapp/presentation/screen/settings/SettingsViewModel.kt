@@ -21,6 +21,7 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.io.File
+import java.io.OutputStream
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import javax.inject.Inject
@@ -87,6 +88,19 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
+    fun backupDatabaseToStream(context: Context, fileName: String, outputStream: OutputStream) {
+        viewModelScope.launch {
+            try {
+                outputStream.use { output ->
+                    BackupManager.performBackupToStream(context, db, fileName, output)
+                }
+                _uiEvent.send(SettingsUiEvent.BackupSuccess(fileName))
+            } catch (e: Exception) {
+                _uiEvent.send(SettingsUiEvent.Error("Gagal mencadangkan data"))
+            }
+        }
+    }
+
     fun restoreDatabase(context: Context, zipFile: File) {
         viewModelScope.launch {
             val success = BackupManager.performRestore(context, db, zipFile)
@@ -98,14 +112,4 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    fun clearAllData() {
-        viewModelScope.launch {
-            try {
-                db.clearAllTables()
-                _uiEvent.send(SettingsUiEvent.Success)
-            } catch (e: Exception) {
-                _uiEvent.send(SettingsUiEvent.Error("Gagal menghapus data"))
-            }
-        }
-    }
 }

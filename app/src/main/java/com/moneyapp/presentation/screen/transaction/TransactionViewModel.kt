@@ -8,12 +8,16 @@ import com.moneyapp.domain.model.TransactionType
 import com.moneyapp.domain.repository.TransactionRepository
 import com.moneyapp.domain.usecase.transaction.GetTransactionsUseCase
 import com.moneyapp.domain.usecase.transaction.SaveTransactionUseCase
+import com.moneyapp.presentation.util.formatRupiahInput
+import com.moneyapp.presentation.util.parseRupiahInput
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -27,6 +31,7 @@ import javax.inject.Inject
  * Validates: Requirements 6.1
  */
 data class TransactionFormState(
+    val id: Long = 0,
     val type: TransactionType = TransactionType.EXPENSE,
     val amount: String = "",
     val category: String = "",
@@ -86,7 +91,7 @@ class TransactionViewModel @Inject constructor(
     }
 
     fun onAmountChange(amount: String) {
-        _formState.update { it.copy(amount = amount, amountError = null) }
+        _formState.update { it.copy(amount = formatRupiahInput(amount), amountError = null) }
     }
 
     fun onCategoryChange(category: String) {
@@ -105,6 +110,28 @@ class TransactionViewModel @Inject constructor(
         _formState.update { it.copy(photoPath = photoPath) }
     }
 
+    fun loadTransactionForEdit(transactionId: Long) {
+        viewModelScope.launch {
+            val transaction = transactions
+                .mapNotNull { list -> list.firstOrNull { it.id == transactionId } }
+                .first()
+
+            _formState.update {
+                it.copy(
+                    id = transaction.id,
+                    type = transaction.type,
+                    amount = formatRupiahInput(transaction.amount.toLong().toString()),
+                    category = transaction.category,
+                    date = transaction.date,
+                    note = transaction.note,
+                    photoPath = transaction.photoPath,
+                    amountError = null,
+                    categoryError = null
+                )
+            }
+        }
+    }
+
     // ── Actions ──────────────────────────────────────────────────────────────
 
     /**
@@ -119,7 +146,7 @@ class TransactionViewModel @Inject constructor(
             val state = _formState.value
 
             // Validasi amount
-            val amountValue = state.amount.toDoubleOrNull()
+            val amountValue = parseRupiahInput(state.amount)
             if (amountValue == null || amountValue <= 0) {
                 _formState.update {
                     it.copy(amountError = "Nominal tidak boleh kosong atau nol")
@@ -138,6 +165,7 @@ class TransactionViewModel @Inject constructor(
             _formState.update { it.copy(isLoading = true) }
 
             val transaction = Transaction(
+                id = state.id,
                 type = state.type,
                 amount = amountValue,
                 category = state.category.trim(),

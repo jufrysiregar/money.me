@@ -38,6 +38,7 @@ import com.moneyapp.presentation.screen.onboarding.OnboardingScreen
 import com.moneyapp.presentation.screen.dashboard.DashboardScreen
 import com.moneyapp.presentation.screen.transaction.TransactionListScreen
 import com.moneyapp.presentation.screen.transaction.TransactionFormScreen
+import com.moneyapp.presentation.screen.transaction.TransactionDetailScreen
 import com.moneyapp.presentation.screen.investment.InvestmentScreen
 import com.moneyapp.presentation.screen.saving.SavingScreen
 import com.moneyapp.presentation.screen.report.ReportScreen
@@ -109,7 +110,7 @@ fun AppNavGraph(
 
             // ── Dashboard ───────────────────────────────────────────────────
             composable(Screen.Dashboard.route) {
-                DashboardScreen(navController = navController, themePreferences = themePreferences)
+                DashboardScreen(navController = navController)
             }
 
             // ── Transaction list ─────────────────────────────────────────────
@@ -134,8 +135,9 @@ fun AppNavGraph(
                 arguments = listOf(
                     navArgument("transactionId") { type = NavType.LongType }
                 )
-            ) {
-                PlaceholderScreen(label = "Detail Transaksi")
+            ) { backStackEntry ->
+                val id = backStackEntry.arguments?.getLong("transactionId") ?: -1L
+                TransactionDetailScreen(navController = navController, transactionId = id)
             }
 
             // ── Investment list ──────────────────────────────────────────────
@@ -196,7 +198,7 @@ private fun SplashScreen(
     val user by viewModel.user.collectAsState(initial = null)
     val isLoaded by viewModel.isLoaded.collectAsState()
 
-    LaunchedEffect(user) {
+    LaunchedEffect(user, isLoaded) {
         // Tunggu sampai Flow emit nilai pertama (bukan null karena belum load)
         // viewModel.isLoaded memastikan kita sudah mendapat respons dari DB
         if (isLoaded) {

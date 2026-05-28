@@ -16,6 +16,7 @@ import java.io.BufferedOutputStream
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
+import java.io.OutputStream
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
@@ -28,6 +29,19 @@ object BackupManager {
 
     private const val BACKUP_JSON_NAME = "backup_data.json"
     private const val SCHEMA_VERSION = 1
+
+    suspend fun performBackupToStream(
+        context: Context,
+        db: AppDatabase,
+        fileName: String,
+        outputStream: OutputStream
+    ) = withContext(Dispatchers.IO) {
+        val tempBackup = performBackup(context, db, fileName)
+        FileInputStream(tempBackup).use { input ->
+            input.copyTo(outputStream)
+        }
+        tempBackup.delete()
+    }
 
     /**
      * Packages the entire local database (users, transactions, investments, savings)

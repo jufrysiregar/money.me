@@ -77,6 +77,31 @@ class InvestmentViewModel @Inject constructor(
         }
     }
 
+    fun updateInvestment(id: Long, additionalAmount: Double, currentValue: Double) {
+        viewModelScope.launch {
+            if (additionalAmount < 0 || currentValue < 0) {
+                _uiEvent.send(InvestmentUiEvent.Error("Nominal tidak boleh negatif"))
+                return@launch
+            }
+
+            val existing = investments.value.firstOrNull { it.id == id }
+            if (existing == null) {
+                _uiEvent.send(InvestmentUiEvent.Error("Investasi tidak ditemukan"))
+                return@launch
+            }
+
+            val updatedInvestment = existing.copy(
+                amount = existing.amount + additionalAmount,
+                currentValue = currentValue
+            )
+
+            when (val result = saveInvestmentUseCase(updatedInvestment)) {
+                is AppResult.Success -> _uiEvent.send(InvestmentUiEvent.Success)
+                is AppResult.Error -> _uiEvent.send(InvestmentUiEvent.Error(result.message))
+            }
+        }
+    }
+
     fun deleteInvestment(id: Long) {
         viewModelScope.launch {
             try {

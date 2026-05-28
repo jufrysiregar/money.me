@@ -12,6 +12,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -32,7 +33,6 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Download
-import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -65,6 +65,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -78,6 +79,7 @@ import java.io.File
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+import kotlin.math.abs
 
 /**
  * Share utility to share captured photo via native Android FileProvider.
@@ -142,6 +144,7 @@ fun TransactionFormScreen(
 ) {
     val context = LocalContext.current
     val formState by viewModel.formState.collectAsState()
+    var horizontalDragAmount by remember { mutableStateOf(0f) }
 
     // Date formatting in Indonesian
     val dateFormatter = remember { DateTimeFormatter.ofPattern("dd MMMM yyyy", Locale("id", "ID")) }
@@ -150,8 +153,7 @@ fun TransactionFormScreen(
     LaunchedEffect(transactionId) {
         viewModel.resetForm()
         if (transactionId != -1L) {
-            // Note: In real-world, we fetch details from DB and populate,
-            // but for MVP, we just reset or handle as creating new.
+            viewModel.loadTransactionForEdit(transactionId)
         }
     }
 
@@ -192,8 +194,9 @@ fun TransactionFormScreen(
         topBar = {
             TopAppBar(
                 title = {
+                    val actionLabel = if (formState.id == 0L) "Tambah" else "Edit"
                     Text(
-                        text = if (formState.type == TransactionType.INCOME) "Tambah Pemasukan" else "Tambah Pengeluaran",
+                        text = if (formState.type == TransactionType.INCOME) "$actionLabel Pemasukan" else "$actionLabel Pengeluaran",
                         fontWeight = FontWeight.Bold
                     )
                 },
@@ -252,7 +255,31 @@ fun TransactionFormScreen(
             }
 
             Column(
-                modifier = Modifier.padding(24.dp)
+                modifier = Modifier
+                    .padding(24.dp)
+                    .pointerInput(formState.type) {
+                        detectHorizontalDragGestures(
+                            onDragStart = { horizontalDragAmount = 0f },
+                            onHorizontalDrag = { _, dragAmount ->
+                                horizontalDragAmount += dragAmount
+                            },
+                            onDragEnd = {
+                                val swipeThreshold = 80f
+                                if (abs(horizontalDragAmount) > swipeThreshold) {
+                                    val nextType = if (horizontalDragAmount < 0) {
+                                        TransactionType.EXPENSE
+                                    } else {
+                                        TransactionType.INCOME
+                                    }
+                                    if (nextType != formState.type) {
+                                        viewModel.onTypeChange(nextType)
+                                    }
+                                }
+                                horizontalDragAmount = 0f
+                            },
+                            onDragCancel = { horizontalDragAmount = 0f }
+                        )
+                    }
             ) {
                 // 1. 💰 NOMINAL FIELD
                 Text(
@@ -265,12 +292,7 @@ fun TransactionFormScreen(
                 Spacer(modifier = Modifier.height(8.dp))
                 OutlinedTextField(
                     value = formState.amount,
-                    onValueChange = {
-                        // Allow numbers only
-                        if (it.isEmpty() || it.all { char -> char.isDigit() }) {
-                            viewModel.onAmountChange(it)
-                        }
-                    },
+                    onValueChange = { viewModel.onAmountChange(it) },
                     prefix = { Text("Rp ", fontWeight = FontWeight.Bold) },
                     placeholder = { Text("Masukkan nominal") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
@@ -525,14 +547,14 @@ fun TransactionFormScreen(
                         ) {
                             Icon(imageVector = Icons.Filled.CameraAlt, contentDescription = "Kamera")
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text(if (hasPhoto) "Ganti Foto Bukti" else "📷 Ambil Foto Bukti", fontWeight = FontWeight.Bold)
+                            Text(if (hasPhoto) "Ganti Foto Bukti" else "Ambil Foto Bukti", fontWeight = FontWeight.Bold)
                         }
                     }
                 }
 
                 Spacer(modifier = Modifier.height(32.dp))
 
-                // 6. 💾 SAVE BUTTON (Bottom layout anchor)
+                // 6. SAVE BUTTON (Bottom layout anchor)
                 Button(
                     onClick = { viewModel.saveTransaction() },
                     enabled = !formState.isLoading,
@@ -545,9 +567,7 @@ fun TransactionFormScreen(
                         .fillMaxWidth()
                         .height(54.dp)
                 ) {
-                    Icon(imageVector = Icons.Filled.Save, contentDescription = "Simpan")
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text("💾 SIMPAN TRANSAKSI", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
+                    Text("SIMPAN TRANSAKSI", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
                 }
             }
         }

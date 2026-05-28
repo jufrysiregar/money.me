@@ -63,6 +63,8 @@ import androidx.navigation.NavController
 import com.moneyapp.domain.model.Investment
 import com.moneyapp.presentation.screen.dashboard.formatRupiah
 import com.moneyapp.presentation.screen.transaction.showDatePicker
+import com.moneyapp.presentation.util.formatRupiahInput
+import com.moneyapp.presentation.util.parseRupiahInput
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -79,6 +81,7 @@ fun InvestmentScreen(
     var showAddDialog by remember { mutableStateOf(false) }
     var showEditDialog by remember { mutableStateOf(false) }
     var selectedInvestmentForEdit by remember { mutableStateOf<Investment?>(null) }
+    var selectedInvestmentForDelete by remember { mutableStateOf<Investment?>(null) }
 
     // Dialog form states
     var name by remember { mutableStateOf("") }
@@ -88,7 +91,8 @@ fun InvestmentScreen(
     val dateFormatter = remember { DateTimeFormatter.ofPattern("dd MMMM yyyy", Locale("id", "ID")) }
 
     // Edit valuation dialog state
-    var editValueInput by remember { mutableStateOf("") }
+    var editAdditionalAmountInput by remember { mutableStateOf("") }
+    var editCurrentValueInput by remember { mutableStateOf("") }
 
     // Listen to ViewModel actions events
     LaunchedEffect(Unit) {
@@ -97,6 +101,7 @@ fun InvestmentScreen(
                 is InvestmentUiEvent.Success -> {
                     showAddDialog = false
                     showEditDialog = false
+                    selectedInvestmentForDelete = null
                     // Reset forms
                     name = ""
                     amount = ""
@@ -219,10 +224,11 @@ fun InvestmentScreen(
                             investment = inv,
                             onUpdateValuationClick = {
                                 selectedInvestmentForEdit = inv
-                                editValueInput = inv.currentValue.toString().replace(".0", "")
+                                editAdditionalAmountInput = ""
+                                editCurrentValueInput = formatRupiahInput(inv.currentValue.toLong().toString())
                                 showEditDialog = true
                             },
-                            onDeleteClick = { viewModel.deleteInvestment(inv.id) }
+                            onDeleteClick = { selectedInvestmentForDelete = inv }
                         )
                     }
                     item {
@@ -251,7 +257,7 @@ fun InvestmentScreen(
 
                     OutlinedTextField(
                         value = amount,
-                        onValueChange = { amount = it },
+                        onValueChange = { amount = formatRupiahInput(it) },
                         label = { Text("Modal Awal (Rp)") },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         shape = RoundedCornerShape(12.dp),
@@ -260,7 +266,7 @@ fun InvestmentScreen(
 
                     OutlinedTextField(
                         value = currentValue,
-                        onValueChange = { currentValue = it },
+                        onValueChange = { currentValue = formatRupiahInput(it) },
                         label = { Text("Nilai Sekarang (Rp)") },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         shape = RoundedCornerShape(12.dp),
@@ -286,8 +292,8 @@ fun InvestmentScreen(
             confirmButton = {
                 Button(
                     onClick = {
-                        val amountVal = amount.toDoubleOrNull() ?: 0.0
-                        val currentVal = currentValue.toDoubleOrNull() ?: amountVal
+                        val amountVal = parseRupiahInput(amount) ?: 0.0
+                        val currentVal = parseRupiahInput(currentValue) ?: amountVal
                         viewModel.saveInvestment(name, amountVal, currentVal, date)
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2D6A4F))
@@ -310,15 +316,23 @@ fun InvestmentScreen(
     if (showEditDialog && selectedInvestmentForEdit != null) {
         AlertDialog(
             onDismissRequest = { showEditDialog = false },
-            title = { Text("Update Nilai Sekarang", fontWeight = FontWeight.Bold) },
+            title = { Text("Update Investasi", fontWeight = FontWeight.Bold) },
             text = {
-                Column {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Text("Aset: ${selectedInvestmentForEdit!!.name}", fontSize = 14.sp)
-                    Spacer(modifier = Modifier.height(12.dp))
                     OutlinedTextField(
-                        value = editValueInput,
-                        onValueChange = { editValueInput = it },
-                        label = { Text("Nilai Terbaru (Rp)") },
+                        value = editAdditionalAmountInput,
+                        onValueChange = { editAdditionalAmountInput = formatRupiahInput(it) },
+                        label = { Text("Tambah Investasi (Rp)") },
+                        placeholder = { Text("Kosongkan jika tidak tambah modal") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedTextField(
+                        value = editCurrentValueInput,
+                        onValueChange = { editCurrentValueInput = formatRupiahInput(it) },
+                        label = { Text("Harga Sekarang (Rp)") },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         shape = RoundedCornerShape(12.dp),
                         modifier = Modifier.fillMaxWidth()
@@ -328,8 +342,14 @@ fun InvestmentScreen(
             confirmButton = {
                 Button(
                     onClick = {
-                        val updatedValue = editValueInput.toDoubleOrNull() ?: 0.0
-                        viewModel.updateCurrentValue(selectedInvestmentForEdit!!.id, updatedValue)
+                        val additionalAmount = parseRupiahInput(editAdditionalAmountInput) ?: 0.0
+                        val currentValue = parseRupiahInput(editCurrentValueInput)
+                            ?: selectedInvestmentForEdit!!.currentValue
+                        viewModel.updateInvestment(
+                            selectedInvestmentForEdit!!.id,
+                            additionalAmount,
+                            currentValue
+                        )
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2D6A4F))
                 ) {
@@ -339,6 +359,32 @@ fun InvestmentScreen(
             dismissButton = {
                 Button(
                     onClick = { showEditDialog = false },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent, contentColor = MaterialTheme.colorScheme.onSurface)
+                ) {
+                    Text("Batal")
+                }
+            }
+        )
+    }
+
+    if (selectedInvestmentForDelete != null) {
+        AlertDialog(
+            onDismissRequest = { selectedInvestmentForDelete = null },
+            title = { Text("Hapus Investasi?", fontWeight = FontWeight.Bold) },
+            text = {
+                Text("Yakin ingin menghapus ${selectedInvestmentForDelete!!.name}? Data ini tidak bisa dikembalikan.")
+            },
+            confirmButton = {
+                Button(
+                    onClick = { viewModel.deleteInvestment(selectedInvestmentForDelete!!.id) },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                ) {
+                    Text("Hapus")
+                }
+            },
+            dismissButton = {
+                Button(
+                    onClick = { selectedInvestmentForDelete = null },
                     colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent, contentColor = MaterialTheme.colorScheme.onSurface)
                 ) {
                     Text("Batal")
