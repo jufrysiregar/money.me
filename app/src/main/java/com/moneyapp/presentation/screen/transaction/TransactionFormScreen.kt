@@ -13,7 +13,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -149,7 +148,6 @@ fun TransactionFormScreen(
     val formState by viewModel.formState.collectAsState()
     var horizontalDragAmount by remember { mutableStateOf(0f) }
     val actionColor = if (formState.type == TransactionType.INCOME) Color(0xFF52B788) else Color(0xFFF4A261)
-    val photoButtonContentColor = if (isSystemInDarkTheme()) Color.White else Color.Black
 
     // Date formatting in Indonesian
     val dateFormatter = remember { DateTimeFormatter.ofPattern("dd MMMM yyyy", Locale("id", "ID")) }
@@ -547,13 +545,11 @@ fun TransactionFormScreen(
                                 cameraLauncher.launch(uri)
                             },
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.surface,
-                                contentColor = photoButtonContentColor
+                                containerColor = actionColor.copy(alpha = 0.15f),
+                                contentColor = actionColor
                             ),
                             shape = RoundedCornerShape(12.dp),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .border(1.5.dp, actionColor, RoundedCornerShape(12.dp))
+                            modifier = Modifier.fillMaxWidth()
                         ) {
                             Icon(
                                 imageVector = Icons.Filled.CameraAlt,

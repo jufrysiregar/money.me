@@ -47,11 +47,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.TextStyle as ComposeTextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.moneyapp.R
 import androidx.navigation.NavController
 import com.moneyapp.presentation.navigation.Screen
 import java.text.NumberFormat
@@ -66,6 +69,12 @@ fun formatRupiah(value: Double): String {
     val formatter = NumberFormat.getCurrencyInstance(Locale("id", "ID"))
     return formatter.format(value).replace(",00", "").replace("Rp", "Rp ")
 }
+
+private val BodoniMtFamily = FontFamily(
+    Font(R.font.bodoni_mt_regular, FontWeight.Normal),
+    Font(R.font.bodoni_mt_bold, FontWeight.Bold),
+    Font(R.font.bodoni_mt_black, FontWeight.Black)
+)
 
 /**
  * DashboardScreen displays user name greeting, top CTA Alert banner, grid cards,
@@ -104,15 +113,15 @@ fun DashboardScreen(
                     Text(
                         text = "Money.me",
                         fontWeight = FontWeight.Black,
+                        fontFamily = BodoniMtFamily,
                         fontSize = 30.sp,
                         lineHeight = 34.sp,
                         style = ComposeTextStyle(
                             brush = Brush.linearGradient(
                                 colors = listOf(
-                                    Color(0xFF2DD4BF),
-                                    Color(0xFFEC4899),
-                                    Color(0xFF8B5CF6),
-                                    Color.White
+                                    Color(0xFF00B4D8), // Tosca segar
+                                    Color(0xFF0077B6), // Biru tosca
+                                    Color(0xFF03045E)  // Biru laut dalam
                                 )
                             )
                         ),

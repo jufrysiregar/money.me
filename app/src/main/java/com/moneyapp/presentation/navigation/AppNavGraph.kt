@@ -1,5 +1,6 @@
 package com.moneyapp.presentation.navigation
 
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -21,6 +22,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavDestination.Companion.hierarchy
@@ -226,10 +228,14 @@ private fun SplashScreen(
 private fun AppBottomNavigation(navController: NavHostController) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
+    val isDarkTheme = isSystemInDarkTheme()
+    val navBackground = if (isDarkTheme) Color(0xFF121212) else Color(0xFFFFFFFF)
+    val activeColor = if (isDarkTheme) Color(0xFFC7E9D0) else Color(0xFFA7C957)
+    val inactiveColor = if (isDarkTheme) Color(0xFF6C757D) else Color(0xFFADB5BD)
 
     NavigationBar(
-        containerColor = MaterialTheme.colorScheme.surface,
-        contentColor = MaterialTheme.colorScheme.onSurface
+        containerColor = navBackground,
+        contentColor = activeColor
     ) {
         bottomNavItems.forEach { item ->
             val selected = currentDestination?.hierarchy?.any {
@@ -256,11 +262,11 @@ private fun AppBottomNavigation(navController: NavHostController) {
                 },
                 label = { Text(text = item.label) },
                 colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = MaterialTheme.colorScheme.primary,
-                    selectedTextColor = MaterialTheme.colorScheme.primary,
-                    indicatorColor = MaterialTheme.colorScheme.secondary,
-                    unselectedIconColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                    unselectedTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                    selectedIconColor = activeColor,
+                    selectedTextColor = activeColor,
+                    indicatorColor = Color.Transparent,
+                    unselectedIconColor = inactiveColor,
+                    unselectedTextColor = inactiveColor
                 )
             )
         }

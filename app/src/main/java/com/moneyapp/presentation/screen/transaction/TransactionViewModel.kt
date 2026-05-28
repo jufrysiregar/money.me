@@ -32,7 +32,7 @@ import javax.inject.Inject
  */
 data class TransactionFormState(
     val id: Long = 0,
-    val type: TransactionType = TransactionType.EXPENSE,
+    val type: TransactionType = TransactionType.INCOME,
     val amount: String = "",
     val category: String = "",
     val date: LocalDate = LocalDate.now(),

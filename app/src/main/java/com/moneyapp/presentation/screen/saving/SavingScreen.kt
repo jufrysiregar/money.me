@@ -130,7 +130,7 @@ fun SavingScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Tabungan", fontWeight = FontWeight.Bold) },
+                title = { Text("🏦 Tabungan", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(imageVector = Icons.Filled.ArrowBack, contentDescription = "Kembali")
