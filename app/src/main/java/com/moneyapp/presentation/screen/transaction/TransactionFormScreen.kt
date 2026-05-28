@@ -285,7 +285,7 @@ fun TransactionFormScreen(
             ) {
                 // 1. 💰 NOMINAL FIELD
                 Text(
-                    text = "💰 NOMINAL",
+                    text = if (formState.type == TransactionType.EXPENSE) "\uD83E\uDDFE NOMINAL" else "\uD83D\uDCB0 NOMINAL",
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary,

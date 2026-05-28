@@ -3,6 +3,7 @@ package com.moneyapp.presentation.screen.saving
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -16,7 +17,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -25,7 +26,6 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Payments
-import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -70,6 +70,12 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
+private val DeleteRed = Color(0xFFD00000)
+private val ListBorderTealLight = Color(0xFF008080)
+private val ListBorderCoralLight = Color(0xFFFF6B6B)
+private val ListBorderTealDark = Color(0xFF20B2AA)
+private val ListBorderCoralDark = Color(0xFFFF8F8F)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SavingScreen(
@@ -78,6 +84,9 @@ fun SavingScreen(
 ) {
     val context = LocalContext.current
     val savings by viewModel.savings.collectAsState()
+    val isDarkTheme = isSystemInDarkTheme()
+    val firstBorderColor = if (isDarkTheme) ListBorderTealDark else ListBorderTealLight
+    val secondBorderColor = if (isDarkTheme) ListBorderCoralDark else ListBorderCoralLight
 
     var showAddDialog by remember { mutableStateOf(false) }
     var showTopUpDialog by remember { mutableStateOf(false) }
@@ -118,14 +127,10 @@ fun SavingScreen(
         }
     }
 
-    // Pick first item as primary target goal (Mockup 4)
-    val primarySaving = savings.firstOrNull()
-    val otherSavings = if (savings.size > 1) savings.subList(1, savings.size) else emptyList()
-
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("🏦 Tabungan", fontWeight = FontWeight.Bold) },
+                title = { Text("Tabungan", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(imageVector = Icons.Filled.ArrowBack, contentDescription = "Kembali")
@@ -144,114 +149,6 @@ fun SavingScreen(
         ) {
             Spacer(modifier = Modifier.height(16.dp))
 
-            // ── 1. TARGET UTAMA SECTION ─────────────────────────────────────
-            if (primarySaving != null) {
-                val progress = if (primarySaving.targetAmount > 0) (primarySaving.currentAmount / primarySaving.targetAmount).toFloat() else 0f
-                val progressPercent = (progress * 100).toInt().coerceIn(0, 100)
-
-                Text(
-                    text = "🎯 TARGET UTAMA",
-                    style = MaterialTheme.typography.titleSmall.copy(
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary,
-                        letterSpacing = 0.5.sp
-                    )
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Card(
-                    shape = RoundedCornerShape(20.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable {
-                            selectedSavingForTopUp = primarySaving
-                            topUpInput = ""
-                            targetUpdateInput = formatRupiahInput(primarySaving.targetAmount.toLong().toString())
-                            showTopUpDialog = true
-                        }
-                ) {
-                    Column(modifier = Modifier.padding(20.dp)) {
-                        Text(
-                            text = primarySaving.targetName,
-                            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.ExtraBold)
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(
-                                text = "Target: ${formatRupiah(primarySaving.targetAmount)}",
-                                fontSize = 13.sp,
-                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                            )
-                            Text(
-                                text = "Terkumpul: ${formatRupiah(primarySaving.currentAmount)}",
-                                fontSize = 13.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.height(12.dp))
-
-                        // Custom Progress Bar matching ASCII mockups (██████░░░░ 60%)
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            LinearProgressIndicator(
-                                progress = { progress.coerceIn(0f, 1f) },
-                                color = Color(0xFF1E6091),
-                                trackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f),
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .height(10.dp)
-                                    .clip(RoundedCornerShape(6.dp))
-                            )
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Text(
-                                text = "$progressPercent%",
-                                fontSize = 13.sp,
-                                fontWeight = FontWeight.ExtraBold,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.height(12.dp))
-
-                        val deadlineStr = try {
-                            primarySaving.targetDate.format(DateTimeFormatter.ofPattern("MMM yyyy", Locale("id", "ID")))
-                        } catch (e: Exception) {
-                            primarySaving.targetDate.toString()
-                        }
-
-                        Text(
-                            text = "Target: $deadlineStr",
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
-                        )
-                    }
-                }
-            } else {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(120.dp)
-                        .clip(RoundedCornerShape(20.dp))
-                        .background(MaterialTheme.colorScheme.surface)
-                        .padding(16.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text("Belum ada target tabungan utama", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f))
-                }
-            }
-
-            Spacer(modifier = Modifier.height(20.dp))
 
             // Add saving goal trigger button
             Button(
@@ -270,7 +167,7 @@ fun SavingScreen(
             Spacer(modifier = Modifier.height(24.dp))
 
             Text(
-                text = "📋 SEMUA TABUNGAN",
+                text = "SEMUA TABUNGAN",
                 style = MaterialTheme.typography.titleSmall.copy(
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary,
@@ -280,7 +177,7 @@ fun SavingScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            if (otherSavings.isEmpty()) {
+            if (savings.isEmpty()) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -288,7 +185,7 @@ fun SavingScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = if (primarySaving == null) "Silakan tambah target tabungan" else "Tidak ada tabungan lain",
+                        text = "Silakan tambah target tabungan",
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
                     )
                 }
@@ -297,9 +194,10 @@ fun SavingScreen(
                     modifier = Modifier.weight(1f),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    items(otherSavings, key = { it.id }) { sav ->
+                    itemsIndexed(savings, key = { _, sav -> sav.id }) { index, sav ->
                         SavingItem(
                             saving = sav,
+                            borderColor = if (index % 2 == 0) firstBorderColor else secondBorderColor,
                             onTopUpClick = {
                                 selectedSavingForTopUp = sav
                                 topUpInput = ""
@@ -317,7 +215,7 @@ fun SavingScreen(
         }
     }
 
-    // ── 1. ADD SAVINGS GOAL DIALOG ───────────────────────────────────────────
+    // Add savings goal dialog
     if (showAddDialog) {
         AlertDialog(
             onDismissRequest = { showAddDialog = false },
@@ -390,11 +288,11 @@ fun SavingScreen(
         )
     }
 
-    // ── 2. TOP UP SAVINGS GOAL DIALOG ────────────────────────────────────────
+    // Top up savings goal dialog
     if (showTopUpDialog && selectedSavingForTopUp != null) {
         AlertDialog(
             onDismissRequest = { showTopUpDialog = false },
-            title = { Text("💰 TOP UP TABUNGAN", fontWeight = FontWeight.Black) },
+            title = { Text("Top Up Tabungan", fontWeight = FontWeight.Black) },
             text = {
                 Column {
                     Text("Target: ${selectedSavingForTopUp!!.targetName}", fontWeight = FontWeight.Bold, fontSize = 14.sp)
@@ -456,7 +354,10 @@ fun SavingScreen(
             confirmButton = {
                 Button(
                     onClick = { viewModel.deleteSaving(selectedSavingForDelete!!.id) },
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = DeleteRed,
+                        contentColor = Color.White
+                    )
                 ) {
                     Text("Hapus")
                 }
@@ -479,6 +380,7 @@ fun SavingScreen(
 @Composable
 private fun SavingItem(
     saving: Saving,
+    borderColor: Color,
     onTopUpClick: () -> Unit,
     onDeleteClick: () -> Unit
 ) {
@@ -489,16 +391,34 @@ private fun SavingItem(
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(1.5.dp, borderColor, RoundedCornerShape(16.dp))
     ) {
-        Row(
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(14.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+                .padding(14.dp)
         ) {
-            Column(modifier = Modifier.weight(1f)) {
+            IconButton(
+                onClick = onDeleteClick,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .size(32.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Delete,
+                    contentDescription = "Hapus",
+                    tint = DeleteRed,
+                    modifier = Modifier.size(18.dp)
+                )
+            }
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(end = 42.dp)
+            ) {
                 Text(
                     text = saving.targetName,
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
@@ -522,15 +442,18 @@ private fun SavingItem(
                         .height(6.dp)
                         .clip(RoundedCornerShape(3.dp))
                 )
-            }
 
-            // Actions (Top-Up / Delete) (Mockup 4)
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = onTopUpClick) {
-                    Icon(imageVector = Icons.Filled.Payments, contentDescription = "Top Up", tint = Color(0xFF1E6091))
-                }
-                IconButton(onClick = onDeleteClick) {
-                    Icon(imageVector = Icons.Filled.Delete, contentDescription = "Hapus", tint = MaterialTheme.colorScheme.error.copy(alpha = 0.6f))
+                Spacer(modifier = Modifier.height(8.dp))
+
+                IconButton(
+                    onClick = onTopUpClick,
+                    modifier = Modifier.size(36.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Payments,
+                        contentDescription = "Top Up",
+                        tint = Color(0xFF1E6091)
+                    )
                 }
             }
         }

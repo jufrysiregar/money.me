@@ -27,6 +27,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.Savings
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -103,6 +104,8 @@ fun DashboardScreen(
                     Text(
                         text = "Money.me",
                         fontWeight = FontWeight.Black,
+                        fontSize = 30.sp,
+                        lineHeight = 34.sp,
                         style = ComposeTextStyle(
                             brush = Brush.linearGradient(
                                 colors = listOf(
@@ -239,7 +242,7 @@ fun DashboardScreen(
                         DashboardAssetCard(
                             title = "TABUNGAN",
                             value = summary?.totalSaving ?: 0.0,
-                            icon = "🏦",
+                            icon = "",
                             backgroundColor = Color(0xFF1E6091),
                             onClick = { navController.navigate(Screen.Saving.route) }
                         )
@@ -249,7 +252,7 @@ fun DashboardScreen(
                         DashboardAssetCard(
                             title = "PENGELUARAN",
                             value = summary?.totalExpense ?: 0.0,
-                            icon = "⚠️",
+                            icon = "🧾",
                             backgroundColor = Color(0xFFF4A261),
                             onClick = { navController.navigate(Screen.Transaction.route) }
                         )
@@ -405,7 +408,16 @@ private fun DashboardAssetCard(
                     fontWeight = FontWeight.Bold,
                     color = Color.White.copy(alpha = 0.8f)
                 )
-                Text(text = icon, fontSize = 16.sp)
+                if (title == "TABUNGAN") {
+                    Icon(
+                        imageVector = Icons.Filled.Savings,
+                        contentDescription = title,
+                        tint = Color.White,
+                        modifier = Modifier.size(20.dp)
+                    )
+                } else {
+                    Text(text = icon, fontSize = 16.sp)
+                }
             }
             Column {
                 Text(

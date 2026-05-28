@@ -246,7 +246,7 @@ fun SettingsScreen(
             Spacer(modifier = Modifier.height(20.dp))
 
             Text(
-                text = "May 28th, 2026 @Jufry Siregar. All rights reserved.",
+                text = "May 27th, 2026 @Jufry Siregar. All rights reserved.",
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Normal,
                 color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.62f),

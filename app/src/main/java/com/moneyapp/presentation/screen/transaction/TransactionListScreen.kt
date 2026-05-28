@@ -1,7 +1,9 @@
 package com.moneyapp.presentation.screen.transaction
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,7 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -54,7 +56,12 @@ import com.moneyapp.presentation.navigation.Screen
 import com.moneyapp.presentation.screen.dashboard.formatRupiah
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
-import java.util.Locale
+
+private val DeleteRed = Color(0xFFD00000)
+private val ListBorderTealLight = Color(0xFF008080)
+private val ListBorderCoralLight = Color(0xFFFF6B6B)
+private val ListBorderTealDark = Color(0xFF20B2AA)
+private val ListBorderCoralDark = Color(0xFFFF8F8F)
 
 /**
  * TransactionListScreen: Lists all transactions, grouped by dates.
@@ -67,6 +74,9 @@ fun TransactionListScreen(
     viewModel: TransactionViewModel = hiltViewModel()
 ) {
     val transactions by viewModel.transactions.collectAsState()
+    val isDarkTheme = isSystemInDarkTheme()
+    val firstBorderColor = if (isDarkTheme) ListBorderTealDark else ListBorderTealLight
+    val secondBorderColor = if (isDarkTheme) ListBorderCoralDark else ListBorderCoralLight
 
     var searchQuery by remember { mutableStateOf("") }
     val filteredTransactions = remember(transactions, searchQuery) {
@@ -165,9 +175,10 @@ fun TransactionListScreen(
                             )
                         }
 
-                        items(list, key = { it.id }) { tx ->
+                        itemsIndexed(list, key = { _, tx -> tx.id }) { index, tx ->
                             TransactionListItem(
                                 transaction = tx,
+                                borderColor = if (index % 2 == 0) firstBorderColor else secondBorderColor,
                                 onEditClick = { navController.navigate(Screen.TransactionForm.createRoute(tx.id)) },
                                 onDeleteClick = { viewModel.deleteTransaction(tx.id) },
                                 onClick = { navController.navigate(Screen.TransactionDetail.createRoute(tx.id)) }
@@ -207,12 +218,11 @@ fun TransactionListScreen(
 @Composable
 private fun TransactionListItem(
     transaction: Transaction,
+    borderColor: Color,
     onEditClick: () -> Unit,
     onDeleteClick: () -> Unit,
     onClick: () -> Unit
 ) {
-    val formatter = DateTimeFormatter.ofPattern("HH:mm", Locale("id", "ID"))
-
     val colorIndicator = if (transaction.type == TransactionType.INCOME) {
         Color(0xFF52B788) // Success Green
     } else {
@@ -227,6 +237,7 @@ private fun TransactionListItem(
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
         modifier = Modifier
             .fillMaxWidth()
+            .border(1.5.dp, borderColor, RoundedCornerShape(16.dp))
             .clickable { onClick() }
     ) {
         Row(
@@ -271,28 +282,17 @@ private fun TransactionListItem(
                             )
                         }
                     }
-                    Spacer(modifier = Modifier.height(2.dp))
-
-                    val timeStr = try {
-                        transaction.date.atStartOfDay().format(formatter)
-                    } catch (e: Exception) {
-                        "00:00"
+                    if (transaction.note.isNotBlank()) {
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            text = transaction.note,
+                            style = MaterialTheme.typography.bodySmall.copy(
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                            ),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
                     }
-
-                    val subtitle = if (transaction.note.isNotBlank()) {
-                        "$timeStr - ${transaction.note}"
-                    } else {
-                        timeStr
-                    }
-
-                    Text(
-                        text = subtitle,
-                        style = MaterialTheme.typography.bodySmall.copy(
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
-                        ),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
                 }
             }
 
@@ -330,7 +330,7 @@ private fun TransactionListItem(
                     Icon(
                         imageVector = Icons.Filled.Delete,
                         contentDescription = "Delete",
-                        tint = MaterialTheme.colorScheme.error.copy(alpha = 0.5f),
+                        tint = DeleteRed,
                         modifier = Modifier.size(18.dp)
                     )
                 }

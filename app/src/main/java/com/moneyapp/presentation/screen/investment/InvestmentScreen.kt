@@ -4,6 +4,7 @@ import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,7 +17,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -71,6 +72,12 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
+private val DeleteRed = Color(0xFFD00000)
+private val ListBorderTealLight = Color(0xFF008080)
+private val ListBorderCoralLight = Color(0xFFFF6B6B)
+private val ListBorderTealDark = Color(0xFF20B2AA)
+private val ListBorderCoralDark = Color(0xFFFF8F8F)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun InvestmentScreen(
@@ -79,6 +86,9 @@ fun InvestmentScreen(
 ) {
     val context = LocalContext.current
     val investments by viewModel.investments.collectAsState()
+    val isDarkTheme = isSystemInDarkTheme()
+    val firstBorderColor = if (isDarkTheme) ListBorderTealDark else ListBorderTealLight
+    val secondBorderColor = if (isDarkTheme) ListBorderCoralDark else ListBorderCoralLight
 
     var showAddDialog by remember { mutableStateOf(false) }
     var showEditDialog by remember { mutableStateOf(false) }
@@ -221,9 +231,10 @@ fun InvestmentScreen(
                     modifier = Modifier.weight(1f),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    items(investments, key = { it.id }) { inv ->
+                    itemsIndexed(investments, key = { _, inv -> inv.id }) { index, inv ->
                         InvestmentItem(
                             investment = inv,
+                            borderColor = if (index % 2 == 0) firstBorderColor else secondBorderColor,
                             onUpdateValuationClick = {
                                 selectedInvestmentForEdit = inv
                                 editAdditionalAmountInput = ""
@@ -379,7 +390,10 @@ fun InvestmentScreen(
             confirmButton = {
                 Button(
                     onClick = { viewModel.deleteInvestment(selectedInvestmentForDelete!!.id) },
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = DeleteRed,
+                        contentColor = Color.White
+                    )
                 ) {
                     Text("Hapus")
                 }
@@ -402,6 +416,7 @@ fun InvestmentScreen(
 @Composable
 private fun InvestmentItem(
     investment: Investment,
+    borderColor: Color,
     onUpdateValuationClick: () -> Unit,
     onDeleteClick: () -> Unit
 ) {
@@ -417,7 +432,9 @@ private fun InvestmentItem(
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(1.5.dp, borderColor, RoundedCornerShape(16.dp))
     ) {
         Row(
             modifier = Modifier
@@ -467,7 +484,7 @@ private fun InvestmentItem(
                     Icon(imageVector = Icons.Filled.Edit, contentDescription = "Edit Nilai", tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f))
                 }
                 IconButton(onClick = onDeleteClick) {
-                    Icon(imageVector = Icons.Filled.Delete, contentDescription = "Hapus", tint = MaterialTheme.colorScheme.error.copy(alpha = 0.6f))
+                    Icon(imageVector = Icons.Filled.Delete, contentDescription = "Hapus", tint = DeleteRed)
                 }
             }
         }
