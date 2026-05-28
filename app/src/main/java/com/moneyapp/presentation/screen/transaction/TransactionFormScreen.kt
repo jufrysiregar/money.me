@@ -13,6 +13,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -147,6 +148,8 @@ fun TransactionFormScreen(
     val context = LocalContext.current
     val formState by viewModel.formState.collectAsState()
     var horizontalDragAmount by remember { mutableStateOf(0f) }
+    val actionColor = if (formState.type == TransactionType.INCOME) Color(0xFF52B788) else Color(0xFFF4A261)
+    val photoButtonContentColor = if (isSystemInDarkTheme()) Color.White else Color.Black
 
     // Date formatting in Indonesian
     val dateFormatter = remember { DateTimeFormatter.ofPattern("dd MMMM yyyy", Locale("id", "ID")) }
@@ -544,13 +547,19 @@ fun TransactionFormScreen(
                                 cameraLauncher.launch(uri)
                             },
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = if (formState.type == TransactionType.INCOME) Color(0xFF52B788).copy(alpha = 0.12f) else Color(0xFFF4A261).copy(alpha = 0.12f),
-                                contentColor = if (formState.type == TransactionType.INCOME) Color(0xFF2D6A4F) else Color(0xFFE07B3A)
+                                containerColor = MaterialTheme.colorScheme.surface,
+                                contentColor = photoButtonContentColor
                             ),
                             shape = RoundedCornerShape(12.dp),
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .border(1.5.dp, actionColor, RoundedCornerShape(12.dp))
                         ) {
-                            Icon(imageVector = Icons.Filled.CameraAlt, contentDescription = "Kamera")
+                            Icon(
+                                imageVector = Icons.Filled.CameraAlt,
+                                contentDescription = "Kamera",
+                                tint = actionColor
+                            )
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(if (hasPhoto) "Ganti Foto Bukti" else "Ambil Foto Bukti", fontWeight = FontWeight.Bold)
                         }
@@ -565,7 +574,7 @@ fun TransactionFormScreen(
                     enabled = !formState.isLoading,
                     shape = RoundedCornerShape(16.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = if (formState.type == TransactionType.INCOME) Color(0xFF52B788) else Color(0xFFF4A261),
+                        containerColor = actionColor,
                         contentColor = Color.White
                     ),
                     modifier = Modifier
