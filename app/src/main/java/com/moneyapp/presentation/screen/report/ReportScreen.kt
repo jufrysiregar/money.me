@@ -69,7 +69,7 @@ import androidx.navigation.NavController
 import com.moneyapp.data.local.db.AppDatabase
 import com.moneyapp.domain.model.Transaction
 import com.moneyapp.domain.model.TransactionType
-import com.moneyapp.presentation.screen.dashboard.formatRupiah
+import com.moneyapp.presentation.util.formatRupiah
 import com.moneyapp.presentation.screen.transaction.TransactionViewModel
 import com.moneyapp.presentation.screen.transaction.showDatePicker
 import com.moneyapp.presentation.util.PdfExporter

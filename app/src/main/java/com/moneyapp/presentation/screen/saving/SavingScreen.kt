@@ -62,7 +62,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.moneyapp.domain.model.Saving
-import com.moneyapp.presentation.screen.dashboard.formatRupiah
+import com.moneyapp.presentation.util.formatRupiah
 import com.moneyapp.presentation.screen.transaction.showDatePicker
 import com.moneyapp.presentation.util.formatRupiahInput
 import com.moneyapp.presentation.util.parseRupiahInput

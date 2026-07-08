@@ -30,6 +30,7 @@ import com.moneyapp.domain.model.Investment
 import com.moneyapp.presentation.theme.Danger
 import com.moneyapp.presentation.theme.Primary
 import com.moneyapp.presentation.theme.Success
+import com.moneyapp.presentation.util.formatPercentage
 import com.moneyapp.presentation.util.formatRupiah
 import java.time.format.DateTimeFormatter
 
@@ -353,7 +354,7 @@ fun InvestmentCard(
                         )
                         percentage?.let {
                             Text(
-                                text = " (${String.format("%.2f", if (isProfit) it else -it)}%)",
+                                text = " (${if (isProfit) "+" else ""}${formatPercentage(if (isProfit) it else -it)})",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = profitLossColor
                             )

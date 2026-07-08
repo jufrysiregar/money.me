@@ -46,7 +46,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.moneyapp.domain.model.Transaction
 import com.moneyapp.domain.model.TransactionType
-import com.moneyapp.presentation.screen.dashboard.formatRupiah
+import com.moneyapp.presentation.util.formatRupiah
 import java.io.File
 import java.time.format.DateTimeFormatter
 import java.util.Locale

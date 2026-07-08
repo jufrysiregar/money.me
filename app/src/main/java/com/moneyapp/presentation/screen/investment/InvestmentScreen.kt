@@ -71,9 +71,12 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.moneyapp.domain.model.Investment
-import com.moneyapp.presentation.screen.dashboard.formatRupiah
 import com.moneyapp.presentation.screen.transaction.showDatePicker
+import com.moneyapp.presentation.util.formatIndonesianNumber
+import com.moneyapp.presentation.util.formatPercentage
+import com.moneyapp.presentation.util.formatRupiah
 import com.moneyapp.presentation.util.formatRupiahInput
+import com.moneyapp.presentation.util.parseIndonesianNumber
 import com.moneyapp.presentation.util.parseRupiahInput
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -123,7 +126,6 @@ fun InvestmentScreen(
     var addCurrentPrice by remember { mutableStateOf("") }
     var addTotalAmount by remember { mutableStateOf("") }
     var addDate by remember { mutableStateOf(LocalDate.now()) }
-    var addNotes by remember { mutableStateOf("") }
 
     // --- Edit form states ---
     var editName by remember { mutableStateOf("") }
@@ -131,7 +133,6 @@ fun InvestmentScreen(
     var editCurrentPrice by remember { mutableStateOf("") }
     var editTotalAmount by remember { mutableStateOf("") }
     var editDate by remember { mutableStateOf(LocalDate.now()) }
-    var editNotes by remember { mutableStateOf("") }
 
     // Listen to ViewModel UI events
     LaunchedEffect(Unit) {
@@ -150,7 +151,6 @@ fun InvestmentScreen(
                     addCurrentPrice = ""
                     addTotalAmount = ""
                     addDate = LocalDate.now()
-                    addNotes = ""
                 }
                 is InvestmentUiEvent.Error -> {
                     Toast.makeText(context, event.message, Toast.LENGTH_LONG).show()
@@ -306,11 +306,10 @@ fun InvestmentScreen(
                             onEditClick = {
                                 selectedInvestmentForEdit = inv
                                 editName = inv.name
-                                editAvgPrice = inv.averagePrice?.let { formatRupiahInput(it.toLong().toString()) } ?: ""
-                                editCurrentPrice = inv.currentPrice?.let { formatRupiahInput(it.toLong().toString()) } ?: ""
+                                editAvgPrice = inv.averagePrice?.let { formatIndonesianNumber(it) } ?: ""
+                                editCurrentPrice = inv.currentPrice?.let { formatIndonesianNumber(it) } ?: ""
                                 editTotalAmount = (inv.totalAmount ?: inv.amount).let { formatRupiahInput(it.toLong().toString()) }
                                 editDate = inv.date
-                                editNotes = inv.notes ?: ""
                                 showEditDialog = true
                             },
                             onDeleteClick = { selectedInvestmentForDelete = inv },
@@ -352,26 +351,26 @@ fun InvestmentScreen(
                         modifier = Modifier.fillMaxWidth()
                     )
 
-                    // Average Price (opsional)
+                    // Average Saham (opsional)
                     OutlinedTextField(
-                        value = TextFieldValue(addAvgPrice, selection = TextRange(addAvgPrice.length)),
-                        onValueChange = { addAvgPrice = formatRupiahInput(it.text) },
-                        label = { Text("Average / Harga Beli") },
-                        placeholder = { Text("Opsional, cth: 10.000") },
+                        value = addAvgPrice,
+                        onValueChange = { if (it.isEmpty() || it.matches(Regex("^[0-9.,]*$"))) addAvgPrice = it },
+                        label = { Text("Average Saham") },
+                        placeholder = { Text("Opsional, cth: 10.500,5") },
                         singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                         shape = RoundedCornerShape(12.dp),
                         modifier = Modifier.fillMaxWidth()
                     )
 
                     // Harga Saat Ini (opsional)
                     OutlinedTextField(
-                        value = TextFieldValue(addCurrentPrice, selection = TextRange(addCurrentPrice.length)),
-                        onValueChange = { addCurrentPrice = formatRupiahInput(it.text) },
+                        value = addCurrentPrice,
+                        onValueChange = { if (it.isEmpty() || it.matches(Regex("^[0-9.,]*$"))) addCurrentPrice = it },
                         label = { Text("Harga Saham Saat Ini") },
                         placeholder = { Text("Opsional, cth: 12.000") },
                         singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                         shape = RoundedCornerShape(12.dp),
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -418,17 +417,6 @@ fun InvestmentScreen(
                         )
                     }
 
-                    // Catatan (opsional)
-                    OutlinedTextField(
-                        value = addNotes,
-                        onValueChange = { addNotes = it },
-                        label = { Text("Catatan") },
-                        placeholder = { Text("Opsional") },
-                        maxLines = 3,
-                        shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    )
-
                     Text(
                         "* Wajib diisi",
                         fontSize = 11.sp,
@@ -441,15 +429,15 @@ fun InvestmentScreen(
                 Button(
                     onClick = {
                         val totalVal = parseRupiahInput(addTotalAmount) ?: 0.0
-                        val avgVal = parseRupiahInput(addAvgPrice)
-                        val curVal = parseRupiahInput(addCurrentPrice)
+                        val avgVal = parseIndonesianNumber(addAvgPrice)
+                        val curVal = parseIndonesianNumber(addCurrentPrice)
                         viewModel.saveInvestmentNew(
                             name = addName,
                             averagePrice = avgVal,
                             currentPrice = curVal,
                             totalAmount = totalVal,
                             date = addDate,
-                            notes = addNotes.ifBlank { null }
+                            notes = null
                         )
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = GreenDark)
@@ -491,26 +479,26 @@ fun InvestmentScreen(
                         modifier = Modifier.fillMaxWidth()
                     )
 
-                    // Average Price
+                    // Average Saham
                     OutlinedTextField(
-                        value = TextFieldValue(editAvgPrice, selection = TextRange(editAvgPrice.length)),
-                        onValueChange = { editAvgPrice = formatRupiahInput(it.text) },
-                        label = { Text("Average / Harga Beli") },
-                        placeholder = { Text("Opsional") },
+                        value = editAvgPrice,
+                        onValueChange = { if (it.isEmpty() || it.matches(Regex("^[0-9.,]*$"))) editAvgPrice = it },
+                        label = { Text("Average Saham") },
+                        placeholder = { Text("Opsional, cth: 10.500,5") },
                         singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                         shape = RoundedCornerShape(12.dp),
                         modifier = Modifier.fillMaxWidth()
                     )
 
                     // Harga Saat Ini
                     OutlinedTextField(
-                        value = TextFieldValue(editCurrentPrice, selection = TextRange(editCurrentPrice.length)),
-                        onValueChange = { editCurrentPrice = formatRupiahInput(it.text) },
+                        value = editCurrentPrice,
+                        onValueChange = { if (it.isEmpty() || it.matches(Regex("^[0-9.,]*$"))) editCurrentPrice = it },
                         label = { Text("Harga Saham Saat Ini") },
-                        placeholder = { Text("Opsional") },
+                        placeholder = { Text("Opsional, cth: 12.000") },
                         singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                         shape = RoundedCornerShape(12.dp),
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -556,24 +544,14 @@ fun InvestmentScreen(
                         )
                     }
 
-                    // Catatan
-                    OutlinedTextField(
-                        value = editNotes,
-                        onValueChange = { editNotes = it },
-                        label = { Text("Catatan") },
-                        placeholder = { Text("Opsional") },
-                        maxLines = 3,
-                        shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    )
                 }
             },
             confirmButton = {
                 Button(
                     onClick = {
                         val totalVal = parseRupiahInput(editTotalAmount)
-                        val avgVal = parseRupiahInput(editAvgPrice)
-                        val curVal = parseRupiahInput(editCurrentPrice)
+                        val avgVal = parseIndonesianNumber(editAvgPrice)
+                        val curVal = parseIndonesianNumber(editCurrentPrice)
                         viewModel.updateInvestmentFull(
                             investment = inv,
                             name = editName.ifBlank { null },
@@ -581,7 +559,7 @@ fun InvestmentScreen(
                             currentPrice = curVal,
                             totalAmount = totalVal,
                             date = editDate,
-                            notes = editNotes.ifBlank { null }
+                            notes = null
                         )
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = GreenDark)
@@ -628,8 +606,8 @@ fun InvestmentScreen(
 
                     // Detail
                     SellDialogRow("Total Investasi", formatRupiah(totalInv))
-                    if (avg != null) SellDialogRow("Average Beli", "Rp ${formatAngka(avg)}/lembar")
-                    if (cur != null) SellDialogRow("Harga Saat Ini", "Rp ${formatAngka(cur)}/lembar")
+                    if (avg != null) SellDialogRow("Average Beli", "Rp ${formatIndonesianNumber(avg)}/lembar")
+                    if (cur != null) SellDialogRow("Harga Saat Ini", "Rp ${formatIndonesianNumber(cur)}/lembar")
                     if (lembar != null) SellDialogRow("Jumlah Lembar", "${lembar.toLong()} lembar")
                     SellDialogRow("Nilai Jual", formatRupiah(nilaiSekarang))
 
@@ -669,7 +647,7 @@ fun InvestmentScreen(
                                 fontSize = 16.sp
                             )
                             Text(
-                                "(${String.format("%.1f", profitPct)}%)",
+                                "(${formatPercentage(profitPct)})",
                                 fontSize = 12.sp,
                                 color = if (isProfit) GreenDark else RedAccent
                             )
@@ -787,7 +765,7 @@ private fun InvestmentItem(
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
-                            "${if (isProfit) "+" else ""}${String.format("%.1f", profitPct)}%",
+                            "${if (isProfit) "+" else ""}${formatPercentage(profitPct)}",
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold,
                             color = profitColor
@@ -803,25 +781,35 @@ private fun InvestmentItem(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
+                // Kolom kiri: data beli
                 Column(modifier = Modifier.weight(1f)) {
                     if (avg != null) {
-                        LabelValueText("Average", "Rp ${formatAngka(avg)}")
+                        LabelValueText("Average Saham", "Rp ${formatIndonesianNumber(avg)}")
                     }
                     if (cur != null) {
-                        LabelValueText("Harga Saat Ini", "Rp ${formatAngka(cur)}")
+                        LabelValueText("Harga Saat Ini", "Rp ${formatIndonesianNumber(cur)}")
                     }
                     LabelValueText("Total Investasi", formatRupiah(totalInv))
                 }
-                if (hasPriceData) {
-                    Column(
-                        modifier = Modifier.weight(1f),
-                        horizontalAlignment = Alignment.End
-                    ) {
-                        LabelValueText("Nilai Sekarang", formatRupiah(nilaiSekarang), Alignment.End)
-                        val sign = if (isProfit) "+" else ""
+                // Kolom kanan: nilai pasar + P&L
+                Column(
+                    modifier = Modifier.weight(1f),
+                    horizontalAlignment = Alignment.End
+                ) {
+                    if (hasPriceData) {
+                        LabelValueText("Market Value", formatRupiah(nilaiSekarang), Alignment.End)
+                    }
+                    val sign = if (isProfit) "+" else ""
+                    LabelValueText(
+                        if (isProfit) "Potential Profit" else "Potential Loss",
+                        "$sign${formatRupiah(profitLoss)}",
+                        Alignment.End,
+                        valueColor = profitColor
+                    )
+                    if (hasPriceData) {
                         LabelValueText(
-                            if (isProfit) "Profit" else "Loss",
-                            "$sign${formatRupiah(profitLoss)}",
+                            "Persentase",
+                            "$sign${formatPercentage(profitPct)}",
                             Alignment.End,
                             valueColor = profitColor
                         )
@@ -929,8 +917,5 @@ private fun SellDialogRow(label: String, value: String) {
 // ============================================================
 //  FORMAT HELPER
 // ============================================================
-
-private fun formatAngka(value: Double): String {
-    return java.text.NumberFormat.getNumberInstance(java.util.Locale("id", "ID"))
-        .format(value.toLong())
-}
+// formatAngka dipindah ke NumberFormatter.formatIndonesianNumber()
+// Semua pemanggil sudah diupdate ke formatIndonesianNumber()

@@ -56,18 +56,12 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.moneyapp.R
 import androidx.navigation.NavController
 import com.moneyapp.presentation.navigation.Screen
-import java.text.NumberFormat
+import com.moneyapp.presentation.util.formatRupiah
 import java.time.LocalDate
 import java.time.format.TextStyle
 import java.util.Locale
 
-/**
- * Helper function to format double values as Indonesian Rupiah currency.
- */
-fun formatRupiah(value: Double): String {
-    val formatter = NumberFormat.getCurrencyInstance(Locale("id", "ID"))
-    return formatter.format(value).replace(",00", "").replace("Rp", "Rp ")
-}
+
 
 private val BodoniMtFamily = FontFamily(
     Font(R.font.bodoni_mt_regular, FontWeight.Normal),

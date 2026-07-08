@@ -53,7 +53,7 @@ import androidx.navigation.NavController
 import com.moneyapp.domain.model.Transaction
 import com.moneyapp.domain.model.TransactionType
 import com.moneyapp.presentation.navigation.Screen
-import com.moneyapp.presentation.screen.dashboard.formatRupiah
+import com.moneyapp.presentation.util.formatRupiah
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
