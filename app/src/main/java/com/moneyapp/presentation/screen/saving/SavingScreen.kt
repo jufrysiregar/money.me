@@ -62,9 +62,11 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.moneyapp.domain.model.Saving
+import com.moneyapp.presentation.util.formatIndonesianNumber
 import com.moneyapp.presentation.util.formatRupiah
 import com.moneyapp.presentation.screen.transaction.showDatePicker
 import com.moneyapp.presentation.util.formatRupiahInput
+import com.moneyapp.presentation.util.parseIndonesianNumber
 import com.moneyapp.presentation.util.parseRupiahInput
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -201,7 +203,7 @@ fun SavingScreen(
                             onTopUpClick = {
                                 selectedSavingForTopUp = sav
                                 topUpInput = ""
-                                targetUpdateInput = formatRupiahInput(sav.targetAmount.toLong().toString())
+                                targetUpdateInput = formatIndonesianNumber(sav.targetAmount)
                                 showTopUpDialog = true
                             },
                             onDeleteClick = { selectedSavingForDelete = sav }
@@ -232,19 +234,21 @@ fun SavingScreen(
                     )
 
                     OutlinedTextField(
-                        value = TextFieldValue(targetAmount, selection = TextRange(targetAmount.length)),
-                        onValueChange = { targetAmount = formatRupiahInput(it.text) },
+                        value = targetAmount,
+                        onValueChange = { if (it.isEmpty() || it.matches(Regex("^[0-9.,]*$"))) targetAmount = it },
                         label = { Text("Nominal Target (Rp)") },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        placeholder = { Text("cth: 1.000.000,5") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                         shape = RoundedCornerShape(12.dp),
                         modifier = Modifier.fillMaxWidth()
                     )
 
                     OutlinedTextField(
-                        value = TextFieldValue(currentAmount, selection = TextRange(currentAmount.length)),
-                        onValueChange = { currentAmount = formatRupiahInput(it.text) },
+                        value = currentAmount,
+                        onValueChange = { if (it.isEmpty() || it.matches(Regex("^[0-9.,]*$"))) currentAmount = it },
                         label = { Text("Terkumpul Awal (Rp)") },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        placeholder = { Text("cth: 100.000,5") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                         shape = RoundedCornerShape(12.dp),
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -268,8 +272,8 @@ fun SavingScreen(
             confirmButton = {
                 Button(
                     onClick = {
-                        val targetVal = parseRupiahInput(targetAmount) ?: 0.0
-                        val currentVal = parseRupiahInput(currentAmount) ?: 0.0
+                        val targetVal = parseIndonesianNumber(targetAmount) ?: 0.0
+                        val currentVal = parseIndonesianNumber(currentAmount) ?: 0.0
                         viewModel.saveSaving(name, targetVal, currentVal, date)
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1E6091))
@@ -299,19 +303,21 @@ fun SavingScreen(
                     Text("Terkumpul saat ini: ${formatRupiah(selectedSavingForTopUp!!.currentAmount)}", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
                     Spacer(modifier = Modifier.height(14.dp))
                     OutlinedTextField(
-                        value = TextFieldValue(topUpInput, selection = TextRange(topUpInput.length)),
-                        onValueChange = { topUpInput = formatRupiahInput(it.text) },
+                        value = topUpInput,
+                        onValueChange = { if (it.isEmpty() || it.matches(Regex("^[0-9.,]*$"))) topUpInput = it },
                         label = { Text("Jumlah Top Up (Rp)") },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        placeholder = { Text("cth: 50.000,5") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                         shape = RoundedCornerShape(12.dp),
                         modifier = Modifier.fillMaxWidth()
                     )
                     Spacer(modifier = Modifier.height(12.dp))
                     OutlinedTextField(
-                        value = TextFieldValue(targetUpdateInput, selection = TextRange(targetUpdateInput.length)),
-                        onValueChange = { targetUpdateInput = formatRupiahInput(it.text) },
+                        value = targetUpdateInput,
+                        onValueChange = { if (it.isEmpty() || it.matches(Regex("^[0-9.,]*$"))) targetUpdateInput = it },
                         label = { Text("Ubah Nilai Target (Rp)") },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        placeholder = { Text("cth: 1.000.000,5") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                         shape = RoundedCornerShape(12.dp),
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -320,8 +326,8 @@ fun SavingScreen(
             confirmButton = {
                 Button(
                     onClick = {
-                        val topUpVal = parseRupiahInput(topUpInput) ?: 0.0
-                        val targetVal = parseRupiahInput(targetUpdateInput)
+                        val topUpVal = parseIndonesianNumber(topUpInput) ?: 0.0
+                        val targetVal = parseIndonesianNumber(targetUpdateInput)
                         viewModel.updateSavingGoal(
                             selectedSavingForTopUp!!.id,
                             topUpVal,
