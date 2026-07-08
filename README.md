@@ -57,19 +57,3 @@ Aplikasi Android native ini dibangun menggunakan teknologi modern berikut:
 5.  **Kotlin Coroutines & Flow**: Mengelola operasi *background* asinkron dan aliran data reaktif secara *real-time*.
 6.  **Jetpack Navigation**: Navigasi antar-screen yang aman secara tipe (*type-safe navigation*).
 7.  **GitHub Actions**: Integrasi CI/CD untuk otomatisasi kompilasi kode dan ekspor APK hasil *build* (`MoneyMe-APK`).
-
----
-
-## 🚀 Cara Menjalankan Project Secara Lokal
-
-1.  Clone repository ini ke komputer lokal Anda:
-    ```bash
-    git clone https://github.com/jufrysiregar/money.me.git
-    ```
-2.  Buka project menggunakan **Android Studio** (Koala atau versi yang lebih baru).
-3.  Pastikan JDK terkonfigurasi pada **Java 17**.
-4.  Jalankan aplikasi di Emulator atau Perangkat Android fisik dengan menekan tombol **Run**.
-5.  Untuk membuat APK debug secara lokal melalui terminal (Windows PowerShell):
-    ```powershell
-    ./gradlew assembleDebug
-    ```
