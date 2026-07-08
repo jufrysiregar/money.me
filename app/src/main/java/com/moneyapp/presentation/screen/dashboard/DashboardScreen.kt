@@ -235,27 +235,17 @@ fun DashboardScreen(
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                     modifier = Modifier.fillMaxSize()
                 ) {
-                    // Card 1: Investasi (Hijau Tua #2D6A4F)
+                    // Card 1: Pemasukan (Hijau Muda #52B788)
                     item {
                         DashboardAssetCard(
-                            title = "INVESTASI",
-                            value = summary?.totalInvestment ?: 0.0,
-                            icon = "📈",
-                            backgroundColor = Color(0xFF2D6A4F),
-                            onClick = { navController.navigate(Screen.Investment.route) }
+                            title = "PEMASUKAN",
+                            value = summary?.totalIncome ?: 0.0,
+                            icon = "💰",
+                            backgroundColor = Color(0xFF52B788),
+                            onClick = { navController.navigate(Screen.Transaction.route) }
                         )
                     }
-                    // Card 2: Tabungan (Biru #1E6091)
-                    item {
-                        DashboardAssetCard(
-                            title = "TABUNGAN",
-                            value = summary?.totalSaving ?: 0.0,
-                            icon = "💸",
-                            backgroundColor = Color(0xFF1E6091),
-                            onClick = { navController.navigate(Screen.Saving.route) }
-                        )
-                    }
-                    // Card 3: Pengeluaran (Amber #F4A261 with warning triangle icon)
+                    // Card 2: Pengeluaran (Amber #F4A261 with warning triangle icon)
                     item {
                         DashboardAssetCard(
                             title = "PENGELUARAN",
@@ -265,14 +255,30 @@ fun DashboardScreen(
                             onClick = { navController.navigate(Screen.Transaction.route) }
                         )
                     }
-                    // Card 4: Pemasukan (Hijau Muda #52B788)
+                    // Card 3: Tabungan (Biru #1E6091)
                     item {
                         DashboardAssetCard(
-                            title = "PEMASUKAN",
-                            value = summary?.totalIncome ?: 0.0,
-                            icon = "💰",
-                            backgroundColor = Color(0xFF52B788),
-                            onClick = { navController.navigate(Screen.Transaction.route) }
+                            title = "TABUNGAN",
+                            value = summary?.totalSaving ?: 0.0,
+                            icon = "💸",
+                            backgroundColor = Color(0xFF1E6091),
+                            onClick = { navController.navigate(Screen.Saving.route) }
+                        )
+                    }
+                    // Card 4: Investasi (Hijau Tua #2D6A4F)
+                    item {
+                        val investmentProfit = summary?.totalInvestmentProfit ?: 0.0
+                        val profitSign = if (investmentProfit >= 0) "+" else ""
+                        val profitSubtitle = if (investmentProfit != 0.0) "$profitSign${formatRupiah(investmentProfit)}" else null
+                        val profitColor = if (investmentProfit >= 0) Color(0xFFB7E4C7) else Color(0xFFFFB3B3)
+                        DashboardAssetCard(
+                            title = "INVESTASI",
+                            value = summary?.totalInvestment ?: 0.0,
+                            icon = "📈",
+                            backgroundColor = Color(0xFF2D6A4F),
+                            onClick = { navController.navigate(Screen.Investment.route) },
+                            subtitle = profitSubtitle,
+                            subtitleColor = profitColor
                         )
                     }
                 }
@@ -389,7 +395,9 @@ private fun DashboardAssetCard(
     value: Double,
     icon: String,
     backgroundColor: Color,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    subtitle: String? = null,
+    subtitleColor: Color = Color.White
 ) {
     Card(
         shape = RoundedCornerShape(18.dp),
@@ -425,6 +433,14 @@ private fun DashboardAssetCard(
                     fontWeight = FontWeight.ExtraBold,
                     color = Color.White
                 )
+                if (subtitle != null) {
+                    Text(
+                        text = subtitle,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = subtitleColor
+                    )
+                }
             }
         }
     }

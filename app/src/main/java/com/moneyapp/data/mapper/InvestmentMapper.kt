@@ -22,7 +22,20 @@ object InvestmentMapper {
         name = entity.name,
         amount = entity.amount,
         currentValue = entity.currentValue,
-        date = LocalDate.parse(entity.date, DATE_FORMATTER)
+        date = runCatching { LocalDate.parse(entity.date, DATE_FORMATTER) }
+            .getOrDefault(LocalDate.now()),
+        notes = entity.notes,
+        photoPath = entity.photoPath,
+        averagePrice = entity.averagePrice,
+        currentPrice = entity.currentPrice,
+        totalAmount = entity.totalAmount,
+        isSold = entity.isSold,
+        soldDate = entity.soldDate?.let {
+            runCatching { LocalDate.parse(it, DATE_FORMATTER) }.getOrNull()
+        },
+        soldPrice = entity.soldPrice,
+        createdAt = entity.createdAt,
+        updatedAt = entity.updatedAt
     )
 
     /** Converts a domain model to a Room entity. */
@@ -31,6 +44,16 @@ object InvestmentMapper {
         name = domain.name,
         amount = domain.amount,
         currentValue = domain.currentValue,
-        date = domain.date.format(DATE_FORMATTER)
+        date = domain.date.format(DATE_FORMATTER),
+        notes = domain.notes,
+        photoPath = domain.photoPath,
+        averagePrice = domain.averagePrice,
+        currentPrice = domain.currentPrice,
+        totalAmount = domain.totalAmount,
+        isSold = domain.isSold,
+        soldDate = domain.soldDate?.format(DATE_FORMATTER),
+        soldPrice = domain.soldPrice,
+        createdAt = domain.createdAt,
+        updatedAt = domain.updatedAt
     )
 }

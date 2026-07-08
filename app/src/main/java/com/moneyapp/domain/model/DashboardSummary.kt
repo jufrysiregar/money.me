@@ -6,7 +6,8 @@ data class DashboardSummary(
     val totalExpense: Double,
     val totalInvestment: Double,
     val totalSaving: Double,
-    val transactionCount: Int
+    val transactionCount: Int,
+    val totalInvestmentProfit: Double = 0.0  // Unrealized profit/loss dari investasi aktif
 ) {
     /**
      * Saldo bersih yang dihitung dari total pemasukan dikurangi pengeluaran,

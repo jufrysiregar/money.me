@@ -1,6 +1,7 @@
 package com.moneyapp.domain.usecase.dashboard
 
 import com.moneyapp.domain.model.DashboardSummary
+import com.moneyapp.domain.model.Investment
 import com.moneyapp.domain.model.TransactionType
 import com.moneyapp.domain.repository.InvestmentRepository
 import com.moneyapp.domain.repository.SavingRepository
@@ -20,12 +21,15 @@ class GetDashboardSummaryUseCase @Inject constructor(
      * Menggabungkan data dari semua repository menjadi satu DashboardSummary.
      * Menggunakan combine untuk reaktif terhadap perubahan data apapun.
      *
+     * totalInvestment = total modal dari investasi aktif (totalAmount)
+     * totalInvestmentProfit = total unrealized profit/loss dari investasi yang ada harga saat ini
+     *
      * Validates: Requirements 3.2, 3.3, 3.4, 3.5, 4.1, 4.2, 4.3
      */
     operator fun invoke(): Flow<DashboardSummary> = combine(
         userRepository.getUser(),
         transactionRepository.getAllTransactions(),
-        investmentRepository.getAllInvestments(),
+        investmentRepository.getActiveInvestments(),
         savingRepository.getAllSavings()
     ) { user, transactions, investments, savings ->
         val totalIncome = transactions
@@ -36,7 +40,11 @@ class GetDashboardSummaryUseCase @Inject constructor(
             .filter { it.type == TransactionType.EXPENSE }
             .sumOf { it.amount }
 
-        val totalInvestment = investments.sumOf { it.currentValue }
+        // Total modal investasi aktif
+        val totalInvestment = investments.sumOf { it.totalAmount ?: it.amount }
+
+        // Total unrealized profit/loss (hanya investasi yang ada harga saat ini)
+        val totalInvestmentProfit = investments.sumOf { inv -> calculateProfitLoss(inv) }
 
         val totalSaving = savings.sumOf { it.currentAmount }
 
@@ -46,7 +54,22 @@ class GetDashboardSummaryUseCase @Inject constructor(
             totalExpense = totalExpense,
             totalInvestment = totalInvestment,
             totalSaving = totalSaving,
-            transactionCount = transactions.size
+            transactionCount = transactions.size,
+            totalInvestmentProfit = totalInvestmentProfit
         )
+    }
+
+    /**
+     * Hitung profit/loss dari satu investasi.
+     * Jika tidak ada harga saat ini, return 0.
+     */
+    private fun calculateProfitLoss(inv: Investment): Double {
+        val total = inv.totalAmount ?: inv.amount
+        val avg = inv.averagePrice ?: return 0.0
+        val cur = inv.currentPrice ?: return 0.0
+        if (avg <= 0.0) return 0.0
+        val lembar = total / avg
+        val nilaiSekarang = lembar * cur
+        return nilaiSekarang - total
     }
 }
