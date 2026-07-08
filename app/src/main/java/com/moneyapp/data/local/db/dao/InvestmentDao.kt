@@ -174,7 +174,8 @@ interface InvestmentDao {
     @Query("""
         SELECT 
             COUNT(*) as totalCount,
-            COALESCE(SUM(total_amount), 0) as totalAmount
+            COALESCE(SUM(total_amount), 0) as totalAmount,
+            0.0 as totalCurrentValue
         FROM investments 
         WHERE is_sold = 1
     """)

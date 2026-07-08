@@ -134,7 +134,7 @@ data class InvestmentEntity(
      * Mendapatkan average price
      * Gunakan averagePrice (baru) jika ada, fallback ke amount / jumlah unit (tidak bisa dihitung)
      */
-    fun getAveragePrice(): Double? {
+    fun getAveragePriceOrFallback(): Double? {
         return averagePrice
     }
     
@@ -142,7 +142,7 @@ data class InvestmentEntity(
      * Mendapatkan harga saham saat ini
      * Gunakan currentPrice (baru) jika ada, fallback ke currentValue (lama)
      */
-    fun getCurrentPrice(): Double? {
+    fun getCurrentPriceOrFallback(): Double? {
         return currentPrice ?: currentValue
     }
     
