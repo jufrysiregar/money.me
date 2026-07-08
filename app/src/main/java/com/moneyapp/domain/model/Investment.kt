@@ -51,7 +51,7 @@ data class Investment(
     /**
      * Mendapatkan total nilai investasi saat ini (Market Value)
      */
-    fun getCurrentValue(): Double {
+    fun getCurrentValueOrFallback(): Double {
         // Gunakan data baru jika tersedia
         if (averagePrice != null && currentPrice != null && totalAmount != null) {
             if (averagePrice != 0.0 && totalAmount != 0.0) {
@@ -72,14 +72,14 @@ data class Investment(
     /**
      * Mendapatkan average price
      */
-    fun getAveragePrice(): Double? {
+    fun getAveragePriceOrFallback(): Double? {
         return averagePrice
     }
     
     /**
      * Mendapatkan harga saham saat ini
      */
-    fun getCurrentPrice(): Double? {
+    fun getCurrentPriceOrFallback(): Double? {
         return currentPrice ?: currentValue
     }
     
@@ -88,7 +88,7 @@ data class Investment(
      */
     fun getProfitLoss(): Double? {
         if (isSold) return null
-        val currentValue = getCurrentValue()
+        val currentValue = getCurrentValueOrFallback()
         val totalInvestment = getTotalInvestment()
         return currentValue - totalInvestment
     }

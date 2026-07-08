@@ -241,7 +241,7 @@ fun InvestmentCard(
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 // Average Price
-                investment.getAveragePrice()?.let {
+                investment.getAveragePriceOrFallback()?.let {
                     Text(
                         text = "📊 Average: ${formatRupiah(it)}/lembar",
                         style = MaterialTheme.typography.bodyMedium,
@@ -251,7 +251,7 @@ fun InvestmentCard(
                 
                 // Current Price / Sold Price
                 if (isActive) {
-                    investment.getCurrentPrice()?.let {
+                    investment.getCurrentPriceOrFallback()?.let {
                         Text(
                             text = "📈 Harga Saat Ini: ${formatRupiah(it)}/lembar",
                             style = MaterialTheme.typography.bodyMedium,
