@@ -308,7 +308,7 @@ fun InvestmentScreen(
                                 editName = inv.name
                                 editAvgPrice = inv.averagePrice?.let { formatIndonesianNumber(it) } ?: ""
                                 editCurrentPrice = inv.currentPrice?.let { formatIndonesianNumber(it) } ?: ""
-                                editTotalAmount = (inv.totalAmount ?: inv.amount).let { formatRupiahInput(it.toLong().toString()) }
+                                editTotalAmount = (inv.totalAmount ?: inv.amount).let { formatIndonesianNumber(it) }
                                 editDate = inv.date
                                 showEditDialog = true
                             },
@@ -377,12 +377,12 @@ fun InvestmentScreen(
 
                     // Total Uang Investasi (wajib)
                     OutlinedTextField(
-                        value = TextFieldValue(addTotalAmount, selection = TextRange(addTotalAmount.length)),
-                        onValueChange = { addTotalAmount = formatRupiahInput(it.text) },
+                        value = addTotalAmount,
+                        onValueChange = { if (it.isEmpty() || it.matches(Regex("^[0-9.,]*$"))) addTotalAmount = it },
                         label = { Text("Total Uang Investasi *") },
-                        placeholder = { Text("cth: 1.000.000") },
+                        placeholder = { Text("cth: 1.000.000,5") },
                         singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                         shape = RoundedCornerShape(12.dp),
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -428,7 +428,7 @@ fun InvestmentScreen(
             confirmButton = {
                 Button(
                     onClick = {
-                        val totalVal = parseRupiahInput(addTotalAmount) ?: 0.0
+                        val totalVal = parseIndonesianNumber(addTotalAmount) ?: 0.0
                         val avgVal = parseIndonesianNumber(addAvgPrice)
                         val curVal = parseIndonesianNumber(addCurrentPrice)
                         viewModel.saveInvestmentNew(
@@ -505,11 +505,12 @@ fun InvestmentScreen(
 
                     // Total Uang Investasi
                     OutlinedTextField(
-                        value = TextFieldValue(editTotalAmount, selection = TextRange(editTotalAmount.length)),
-                        onValueChange = { editTotalAmount = formatRupiahInput(it.text) },
+                        value = editTotalAmount,
+                        onValueChange = { if (it.isEmpty() || it.matches(Regex("^[0-9.,]*$"))) editTotalAmount = it },
                         label = { Text("Total Uang Investasi") },
+                        placeholder = { Text("cth: 1.000.000,5") },
                         singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                         shape = RoundedCornerShape(12.dp),
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -549,7 +550,7 @@ fun InvestmentScreen(
             confirmButton = {
                 Button(
                     onClick = {
-                        val totalVal = parseRupiahInput(editTotalAmount)
+                        val totalVal = parseIndonesianNumber(editTotalAmount)
                         val avgVal = parseIndonesianNumber(editAvgPrice)
                         val curVal = parseIndonesianNumber(editCurrentPrice)
                         viewModel.updateInvestmentFull(
