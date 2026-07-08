@@ -108,7 +108,7 @@ data class InvestmentEntity(
      * 
      * Untuk investasi yang sudah dijual: return null
      */
-    fun getCurrentValue(): Double? {
+    fun getCurrentValueOrFallback(): Double? {
         if (isSold) return null
         
         // Gunakan data baru jika tersedia
@@ -159,7 +159,7 @@ data class InvestmentEntity(
     fun getProfitLoss(): Double? {
         if (isSold) return null
         
-        val currentValue = getCurrentValue() ?: return null
+        val currentValue = getCurrentValueOrFallback() ?: return null
         val totalInvestment = getTotalInvestment()
         
         return currentValue - totalInvestment
@@ -316,7 +316,7 @@ data class InvestmentEntity(
  */
 fun List<InvestmentEntity>.getTotalActiveValue(): Double {
     return this.filter { !it.isSold }
-        .mapNotNull { it.getCurrentValue() }
+        .mapNotNull { it.getCurrentValueOrFallback() }
         .sum()
 }
 
